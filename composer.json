@@ -1,0 +1,27 @@
+{
+    "name": "geeshoe/dblib",
+    "description": "PHP library to connect to mysql/mariadb using PDO",
+    "keywords": [
+        "geeshoe",
+        "dblib",
+        "dbclass",
+        "mysql",
+        "mariadb",
+        "pdo"
+    ],
+    "homepage": "http://www.geeshoe.com",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jesse Rushlow",
+            "email": "jr@geeshoe.com",
+            "homepage": "http://geeshoe.com",
+            "role": "Developer"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Geeshoe\\DbLib\\": "src/"
+        }
+    }
+}
