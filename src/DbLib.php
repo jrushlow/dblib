@@ -1,28 +1,60 @@
 <?php
+/*
+ * Copyright 2018 Jesse Rushlow - Geeshoe Development
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+ */
 namespace Geeshoe\DbLib;
 
 
+/**
+ * Class DbLib
+ * @package Geeshoe\DbLib
+ */
 class DbLib
 {
+    /**
+     * @var null
+     */
     private $connection = null;
 
+    /**
+     * @var null
+     */
     private $iniPath = null;
 
+    /**
+     * @var array
+     */
     public $insert = array();
 
+    /**
+     * @var array
+     */
     public $values = array();
 
+    /**
+     * DbLib constructor.
+     * @param $iniLocation
+     */
     public function __construct($iniLocation)
     {
-//        $this->iniPath = dirname(__DIR__, 4) . '/DbConfig.ini';
         $this->iniPath = $iniLocation;
-        $settings = parse_ini_file($this->iniPath, true);
-
-        if (!empty($settings['config']['AltPath'])) {
-            $this->iniPath = $settings['config']['AltPath'];
-        }
     }
 
+    /**
+     * @return null|\PDO
+     */
     private function connect()
     {
         if (!isset($this->connection)) {
@@ -38,23 +70,40 @@ class DbLib
         return $this->connection;
     }
 
+    /**
+     * @param $sqlStatement
+     */
     public function executeQueryWithNoReturn($sqlStatement)
     {
         $this->connect()->exec($sqlStatement);
     }
 
+    /**
+     * @param $sqlStatement
+     * @param $fetchStyle
+     * @return mixed
+     */
     public function executeQueryWithSingleReturn($sqlStatement, $fetchStyle)
     {
-        $result = $this->connect()->exec($sqlStatement)->fetch($fetchStyle);
+        $result = $this->connect()->query($sqlStatement)->fetch($fetchStyle);
         return $result;
     }
 
+    /**
+     * @param $sqlStatement
+     * @param $fetchStyle
+     * @return array
+     */
     public function executeQueryWithAllReturned($sqlStatement, $fetchStyle)
     {
-        $result = $this->connect()->exec($sqlStatement)->fetchAll($fetchStyle);
+        $result = $this->connect()->query($sqlStatement)->fetchAll($fetchStyle);
         return $result;
     }
 
+    /**
+     * @param $sqlStatement
+     * @param $valuesArray
+     */
     public function manipulateDataWithNoReturn($sqlStatement, $valuesArray)
     {
         $stmt = $this->connect()->prepare($sqlStatement);
@@ -66,6 +115,12 @@ class DbLib
         $stmt->execute();
     }
 
+    /**
+     * @param string $sqlStatement
+     * @param array $valuesArray
+     * @param string $fetchStyle
+     * @return mixed
+     */
     public function manipulateDataWithSingleReturn(
         string $sqlStatement,
         array $valuesArray,
@@ -84,6 +139,12 @@ class DbLib
         return $results;
     }
 
+    /**
+     * @param string $sqlStatement
+     * @param array $valuesArray
+     * @param string $fetchStyle
+     * @return array
+     */
     public function manipulateDataWithAllReturned(
         string $sqlStatement,
         array $valuesArray,
@@ -101,10 +162,17 @@ class DbLib
         return $results;
     }
 
+    /**
+     *
+     */
     public function deleteData()
     {
     }
 
+    /**
+     * @param string $typeOfArray
+     * @param array $userSuppliedData
+     */
     public function createDataArray(string $typeOfArray, array $userSuppliedData)
     {
         foreach (array_keys($userSuppliedData) as $key) {
@@ -118,6 +186,10 @@ class DbLib
         }
     }
 
+    /**
+     * @param string $insertInWhatTable
+     * @return string
+     */
     public function createSqlInsertStatement(string $insertInWhatTable)
     {
         $statement = 'INSERT INTO `'.$insertInWhatTable.'`('
@@ -128,6 +200,12 @@ class DbLib
         return $statement;
     }
 
+    /**
+     * @param string $updateWhatTable
+     * @param string $updateByWhatColumn
+     * @param string $updateWhatId
+     * @return string
+     */
     public function createSqlUpdateStatement(
         string $updateWhatTable,
         string $updateByWhatColumn,
@@ -138,6 +216,12 @@ class DbLib
             .$updateByWhatColumn.'` = ' . $updateWhatId;
     }
 
+    /**
+     * @param string $deleteFromWhichTable
+     * @param string $deleteByWhatColumn
+     * @param string $deleteWhatId
+     * @return string
+     */
     public function createSqlDeleteStatement(
         string $deleteFromWhichTable,
         string $deleteByWhatColumn,

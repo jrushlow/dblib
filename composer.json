@@ -1,6 +1,6 @@
 {
     "name": "geeshoe/dblib",
-    "description": "PHP library to connect to mysql/mariadb using PDO",
+    "description": "PHP library for automating MySQL/MariaDb tasks within your project",
     "keywords": [
         "geeshoe",
         "dblib",
