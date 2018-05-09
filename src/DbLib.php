@@ -80,10 +80,10 @@ class DbLib
 
     /**
      * @param $sqlStatement
-     * @param $fetchStyle
+     * @param int $fetchStyle
      * @return mixed
      */
-    public function executeQueryWithSingleReturn($sqlStatement, $fetchStyle)
+    public function executeQueryWithSingleReturn($sqlStatement, int $fetchStyle)
     {
         $result = $this->connect()->query($sqlStatement)->fetch($fetchStyle);
         return $result;
@@ -91,10 +91,10 @@ class DbLib
 
     /**
      * @param $sqlStatement
-     * @param $fetchStyle
+     * @param int $fetchStyle
      * @return array
      */
-    public function executeQueryWithAllReturned($sqlStatement, $fetchStyle)
+    public function executeQueryWithAllReturned($sqlStatement, int $fetchStyle)
     {
         $result = $this->connect()->query($sqlStatement)->fetchAll($fetchStyle);
         return $result;
@@ -118,13 +118,13 @@ class DbLib
     /**
      * @param string $sqlStatement
      * @param array $valuesArray
-     * @param string $fetchStyle
+     * @param int $fetchStyle
      * @return mixed
      */
     public function manipulateDataWithSingleReturn(
         string $sqlStatement,
         array $valuesArray,
-        string $fetchStyle
+        int $fetchStyle
     )
     {
         $stmt = $this->connect()->prepare($sqlStatement);
@@ -142,13 +142,13 @@ class DbLib
     /**
      * @param string $sqlStatement
      * @param array $valuesArray
-     * @param string $fetchStyle
+     * @param int $fetchStyle
      * @return array
      */
     public function manipulateDataWithAllReturned(
         string $sqlStatement,
         array $valuesArray,
-        string $fetchStyle)
+        int $fetchStyle)
     {
         $stmt = $this->connect()->prepare($sqlStatement);
 
