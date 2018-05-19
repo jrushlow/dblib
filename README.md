@@ -1,6 +1,4 @@
 # DbLib
-Replaces dbClass-php
-
 DbLib is a PHP library designed to make it easier to work with MySQL/MariaDb 
 databases that your project depends on.
 
@@ -8,16 +6,21 @@ Please note that this project is in initial development and as such, some docume
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+DbLib is intended to be fully compliant with [PSR-2](https://www.php-fig.org/psr/psr-2/)
 
 ### Prerequisites
 
-Current development of the project is being done with PHP 7.2, however earlier versions of PHP that support the MySQL
- PDO extension should work. To check if the PDO MySQL driver is enabled, run the following command in the CLI or
+DbLib works with both MySQL and MariaDb.
+
+* PHP 7.1+
+* [PDO_MYSQL extension](http://php.net/manual/en/ref.pdo-mysql.php)
+
+To check if the PDO MySQL driver is enabled, run the following command in the CLI or
   add it to a page in your web root...
 
 ```
-phpinfo();
+phpinfo(); <-- Use with script in webroot.
+php -i <-- Use with CLI
 ```
 and ensure PDO drivers lists MySQL. If it doesn't or you cannot find any mention of PDO in phpinfo(). You may need to 
 recompile PHP using:
@@ -58,7 +61,7 @@ passWord = password
 
 ### Documentation
 
-API Documentation is soon to come.
+API & usage documentation is soon to come.
 
 ### Authors
 

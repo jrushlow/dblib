@@ -7,10 +7,12 @@
         "dbclass",
         "mysql",
         "mariadb",
-        "pdo"
+        "pdo",
+        "php",
+        "database"
     ],
     "homepage": "http://www.geeshoe.com",
-    "license": "MIT",
+    "license": "Apache-2.0",
     "authors": [
         {
             "name": "Jesse Rushlow",
@@ -19,6 +21,10 @@
             "role": "Developer"
         }
     ],
+    "require" : {
+        "php" : "^7.1",
+        "ext-pdo_mysql" : "*"
+    },
     "autoload": {
         "psr-4": {
             "Geeshoe\\DbLib\\": "src/"
