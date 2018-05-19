@@ -14,8 +14,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-namespace Geeshoe\DbLib;
+declare(strict_types=1);
 
+namespace Geeshoe\DbLib;
 
 /**
  * Class DbLib
@@ -24,35 +25,38 @@ namespace Geeshoe\DbLib;
 class DbLib
 {
     /**
-     * @var null
+     * @var null|\PDO
      */
     private $connection = null;
 
     /**
-     * @var null
+     * @var null|string
      */
     private $iniPath = null;
 
     /**
-     * @var array
+     * @var array Populated by the create methods below.
      */
     public $insert = array();
 
     /**
-     * @var array
+     * @var array Populated by the create methods below.
      */
     public $values = array();
 
     /**
      * DbLib constructor.
-     * @param $iniLocation
+     *
+     * @param string $iniLocation Absolute path to config file.
      */
-    public function __construct($iniLocation)
+    public function __construct(string $iniLocation)
     {
         $this->iniPath = $iniLocation;
     }
 
     /**
+     * Parses the config file and creates a new PDO instance.
+     *
      * @return null|\PDO
      */
     private function connect()
@@ -71,40 +75,60 @@ class DbLib
     }
 
     /**
-     * @param $sqlStatement
+     * Execute a statement without returning any affected row's.
+     *
+     * Useful for issuing command's to the server.
+     *
+     * @param string $sqlStatement
      */
-    public function executeQueryWithNoReturn($sqlStatement)
+    public function executeQueryWithNoReturn(string $sqlStatement)
     {
         $this->connect()->exec($sqlStatement);
     }
 
     /**
-     * @param $sqlStatement
+     * Execute a query, returning 1 single affected row.
+     *
+     * I.e. 'SELECT * FROM `clients` WHERE `name` = jesse;
+     * Note: Use manipulateDataWithSingleReturn when query is used in conjunction
+     * with untrusted user supplied data. I.e. Form data...
+     *
+     * @param string $sqlStatement
      * @param int $fetchStyle
      * @return mixed
      */
-    public function executeQueryWithSingleReturn($sqlStatement, int $fetchStyle)
+    public function executeQueryWithSingleReturn(string $sqlStatement, int $fetchStyle)
     {
         $result = $this->connect()->query($sqlStatement)->fetch($fetchStyle);
         return $result;
     }
 
     /**
-     * @param $sqlStatement
+     * Execute a query returning 1 or more affected row's.
+     *
+     * I.e. 'SELECT * FROM `clients`;
+     *
+     * @param string $sqlStatement
      * @param int $fetchStyle
      * @return array
      */
-    public function executeQueryWithAllReturned($sqlStatement, int $fetchStyle)
+    public function executeQueryWithAllReturned(string $sqlStatement, int $fetchStyle)
     {
         $result = $this->connect()->query($sqlStatement)->fetchAll($fetchStyle);
         return $result;
     }
 
     /**
-     * @param $sqlStatement
-     * @param $valuesArray
+     * Execute a prepared statement without returning any affected rows.
+     *
+     * I.e. 'DELETE FROM `myClients` WHERE `name` = :name'
+     * It was intended to use the manipulateData methods in conjunction with the
+     * create methods below. See documentation for further details and examples.
+     *
+     * @param string $sqlStatement
+     * @param array $valuesArray
      */
-    public function manipulateDataWithNoReturn($sqlStatement, $valuesArray)
+    public function manipulateDataWithNoReturn(string $sqlStatement, array $valuesArray)
     {
         $stmt = $this->connect()->prepare($sqlStatement);
 
@@ -116,6 +140,12 @@ class DbLib
     }
 
     /**
+     * Execute a prepared statement returning only 1 affected row.
+     *
+     * I.e. 'SELECT * FROM `myClients` WHERE `clientId` = :id';
+     * It was intended to use the manipulateData methods in conjunction with the
+     * create methods below. See documentation for further details and examples.
+     *
      * @param string $sqlStatement
      * @param array $valuesArray
      * @param int $fetchStyle
@@ -125,8 +155,7 @@ class DbLib
         string $sqlStatement,
         array $valuesArray,
         int $fetchStyle
-    )
-    {
+    ) {
         $stmt = $this->connect()->prepare($sqlStatement);
 
         foreach ($valuesArray as $key => $value) {
@@ -140,6 +169,12 @@ class DbLib
     }
 
     /**
+     * Execute a prepared statement returning one or more affected rows.
+     *
+     * I.e. 'SELECT * FROM `myClients` WHERE `city` = :city';
+     * It was intended to use the manipulateData methods in conjunction with the
+     * create methods below. See documentation for further details and examples.
+     *
      * @param string $sqlStatement
      * @param array $valuesArray
      * @param int $fetchStyle
@@ -148,8 +183,8 @@ class DbLib
     public function manipulateDataWithAllReturned(
         string $sqlStatement,
         array $valuesArray,
-        int $fetchStyle)
-    {
+        int $fetchStyle
+    ) {
         $stmt = $this->connect()->prepare($sqlStatement);
 
         foreach ($valuesArray as $key => $value) {
@@ -163,15 +198,18 @@ class DbLib
     }
 
     /**
+     * Creates an array of data to be used in conjunction with the manipulate methods.
      *
-     */
-    public function deleteData()
-    {
-    }
-
-    /**
-     * @param string $typeOfArray
+     * When the method is called, it populates both the insert and values properties.
+     * Use insert in the typeOfArray argument when creating new rows, otherwise
+     * use manipulate.
+     *
+     * See documentation for further examples and use cases.
+     *
+     * @param string $typeOfArray Value should be either "insert" or "manipulate"
      * @param array $userSuppliedData
+     *
+     * @return void
      */
     public function createDataArray(string $typeOfArray, array $userSuppliedData)
     {
@@ -187,8 +225,13 @@ class DbLib
     }
 
     /**
+     * Creates a insert statement. Must call the createDataArray method first!
+     *
+     * See documentation for further examples and use cases.
+     *
      * @param string $insertInWhatTable
-     * @return string
+     *
+     * @return string Returns a query statement to be used for the manipulate methods.
      */
     public function createSqlInsertStatement(string $insertInWhatTable)
     {
@@ -201,33 +244,41 @@ class DbLib
     }
 
     /**
+     * Creates an update statement. Must call the createDataArray method first!
+     *
+     * See documentation for further examples and use cases.
+     *
      * @param string $updateWhatTable
      * @param string $updateByWhatColumn
      * @param string $updateWhatId
-     * @return string
+     *
+     * @return string Returns a query statement to be used for the manipulate methods.
      */
     public function createSqlUpdateStatement(
         string $updateWhatTable,
         string $updateByWhatColumn,
         string $updateWhatId
-    )
-    {
+    ) {
         return 'UPDATE `'.$updateWhatTable.'` SET ' . implode(", ", $this->insert) . ' WHERE `'
             .$updateByWhatColumn.'` = ' . $updateWhatId;
     }
 
     /**
+     * Creates a delete statement. Must call the createDataArray method first!
+     *
+     * See documentation for further examples and use cases.
+     *
      * @param string $deleteFromWhichTable
      * @param string $deleteByWhatColumn
      * @param string $deleteWhatId
-     * @return string
+     *
+     * @return string Returns a query statement to be used for the manipulate methods.
      */
     public function createSqlDeleteStatement(
         string $deleteFromWhichTable,
         string $deleteByWhatColumn,
         string $deleteWhatId
-    )
-    {
+    ) {
         return 'DELETE FROM `' . $deleteFromWhichTable . '` WHERE `'
             . $deleteByWhatColumn . '` = ' . $deleteWhatId . ';';
     }
