@@ -91,37 +91,33 @@ class DbLib
     protected function connect()
     {
         if ($this->getDbLibConfig()) {
-            if (!empty($this->configJsonFile->hostName)) {
-                $host = $this->configJsonFile->hostName;
-            } else {
-                throw new \Exception('hostName is not set in the DbLib config file.');
+            $arrays = array(
+                'hostName' => 'hostName is not set in the DbLib config file.',
+                'port' => 'port is not set in the DbLib config file.',
+                'username' => 'username is not set in the DbLib config file.',
+                'password' => 'password is not set in the DbLib config file.'
+            );
+
+            $hostName = null;
+            $port = null;
+            $username = null;
+            $password = null;
+
+            foreach ($arrays as $configParam => $exceptionMsg) {
+                if (!empty($this->configJsonFile->$configParam)) {
+                    $$configParam = $this->configJsonFile->$configParam;
+                } else {
+                    throw new \Exception($exceptionMsg);
+                }
             }
 
-            if (!empty($this->configJsonFile->port)) {
-                $port = $this->configJsonFile->port;
-            } else {
-                throw new \Exception('port is not set in the DbLib config file.');
-            }
-
-            if (!empty($this->configJsonFile->username)) {
-                $userName = $this->configJsonFile->username;
-            } else {
-                throw new \Exception('username is not set in the DbLib config file.');
-            }
-
-            if (!empty($this->configJsonFile->password)) {
-                $password = $this->configJsonFile->password;
-            } else {
-                throw new \Exception('password is not set in the DbLib config file.');
-            }
-
-            $dsn = 'mysql:host=' . $host . ';port=' . $port;
+            $dsn = 'mysql:host=' . $hostName . ';port=' . $port;
 
             if (!empty($this->configJsonFile->database)) {
                 $dsn .= ';dbname=' . $this->configJsonFile->database;
             }
 
-            return new \PDO($dsn, $userName, $password);
+            return new \PDO($dsn, $username, $password);
         }
         //  $this->connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
     }
