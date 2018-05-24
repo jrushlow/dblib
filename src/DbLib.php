@@ -27,12 +27,17 @@ class DbLib
     /**
      * @var null|\PDO
      */
-    private $connection = null;
+    protected $connection = null;
 
     /**
      * @var null|string
      */
-    private $iniPath = null;
+    protected $configFilePath = null;
+
+    /**
+     * @var null|object
+     */
+    protected $configJsonFile = null;
 
     /**
      * @var array Populated by the create methods below.
@@ -47,31 +52,78 @@ class DbLib
     /**
      * DbLib constructor.
      *
-     * @param string $iniLocation Absolute path to config file.
+     * @param string $absoluteConfigFilePath Absolute path to config file.
      */
-    public function __construct(string $iniLocation)
+    public function __construct(string $absoluteConfigFilePath)
     {
-        $this->iniPath = $iniLocation;
+        $this->configFilePath = $absoluteConfigFilePath;
     }
 
     /**
-     * Parses the config file and creates a new PDO instance.
+     * Parse the DbLib .json configuration file.
      *
-     * @return null|\PDO
+     * @return bool Returns true if able to parse config file.
+     * @throws \Exception
      */
-    private function connect()
+    protected function getDbLibConfig()
     {
-        if (!isset($this->connection)) {
-            $ini = parse_ini_file($this->iniPath, true);
-            $this->connection = new \PDO(
-                'mysql:dbname='.$ini['mysql']['dataBase'].
-                ';host='.$ini['mysql']['hostName'].':'.$ini['mysql']['port'],
-                $ini['mysql']['userName'],
-                $ini['mysql']['passWord']
-            );
-            $this->connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        if (is_file($this->configFilePath)) {
+            $jsonConfig = file_get_contents($this->configFilePath);
+            $jsonConfig = json_decode($jsonConfig);
+
+            if (!empty($jsonConfig->dblibConfig) && is_object($jsonConfig->dblibConfig)) {
+                $this->configJsonFile = $jsonConfig->dblibConfig;
+                return true;
+            } else {
+                throw new \Exception('DbLib config file malformed.');
+            }
+        } else {
+            throw new \Exception('Specified config file location does not exists for DbLib.');
         }
-        return $this->connection;
+    }
+
+    /**
+     * Creates new \PDO instance.
+     *
+     * @return \PDO
+     * @throws \Exception
+     */
+    protected function connect()
+    {
+        if ($this->getDbLibConfig()) {
+            if (!empty($this->configJsonFile->hostName)) {
+                $host = $this->configJsonFile->hostName;
+            } else {
+                throw new \Exception('hostName is not set in the DbLib config file.');
+            }
+
+            if (!empty($this->configJsonFile->port)) {
+                $port = $this->configJsonFile->port;
+            } else {
+                throw new \Exception('port is not set in the DbLib config file.');
+            }
+
+            if (!empty($this->configJsonFile->username)) {
+                $userName = $this->configJsonFile->username;
+            } else {
+                throw new \Exception('username is not set in the DbLib config file.');
+            }
+
+            if (!empty($this->configJsonFile->password)) {
+                $password = $this->configJsonFile->password;
+            } else {
+                throw new \Exception('password is not set in the DbLib config file.');
+            }
+
+            $dsn = 'mysql:host=' . $host . ';port=' . $port;
+
+            if (!empty($this->configJsonFile->database)) {
+                $dsn .= ';dbname=' . $this->configJsonFile->database;
+            }
+
+            return new \PDO($dsn, $userName, $password);
+        }
+        //  $this->connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
     }
 
     /**
@@ -80,6 +132,8 @@ class DbLib
      * Useful for issuing command's to the server.
      *
      * @param string $sqlStatement
+     *
+     * @throws \Exception
      */
     public function executeQueryWithNoReturn(string $sqlStatement)
     {
@@ -96,6 +150,8 @@ class DbLib
      * @param string $sqlStatement
      * @param int $fetchStyle
      * @return mixed
+     *
+     * @throws \Exception
      */
     public function executeQueryWithSingleReturn(string $sqlStatement, int $fetchStyle)
     {
@@ -111,6 +167,8 @@ class DbLib
      * @param string $sqlStatement
      * @param int $fetchStyle
      * @return array
+     *
+     * @throws \Exception
      */
     public function executeQueryWithAllReturned(string $sqlStatement, int $fetchStyle)
     {
@@ -127,6 +185,8 @@ class DbLib
      *
      * @param string $sqlStatement
      * @param array $valuesArray
+     *
+     * @throws \Exception
      */
     public function manipulateDataWithNoReturn(string $sqlStatement, array $valuesArray)
     {
@@ -150,6 +210,8 @@ class DbLib
      * @param array $valuesArray
      * @param int $fetchStyle
      * @return mixed
+     *
+     * @throws \Exception
      */
     public function manipulateDataWithSingleReturn(
         string $sqlStatement,
@@ -179,6 +241,8 @@ class DbLib
      * @param array $valuesArray
      * @param int $fetchStyle
      * @return array
+     *
+     * @throws \Exception
      */
     public function manipulateDataWithAllReturned(
         string $sqlStatement,
