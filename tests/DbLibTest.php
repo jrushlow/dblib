@@ -76,7 +76,17 @@ class DbLibTest extends TestCase
                         "port" : "3306",
                         "username" : "myUsername",
                         "password" : "SomePassword",
-                        "database" : "someDatabase"
+                        "database" : "someDatabase",
+                        "pdoAttributes" : [
+                          {
+                            "attribute" : "PDO::ATTR_CASE",
+                            "value" : "PDO::CASE_NATURAL"
+                          },
+                          {
+                            "attribute" : "PDO::ATTR_ERRMODE",
+                            "value" : "PDO::ERRMODE_EXCEPTION"
+                          }
+                        ]
                       }
                     }'
         );
@@ -212,7 +222,7 @@ class DbLibTest extends TestCase
         );
     }
 
-    public function testCreateSqlDeleteStatementReturnsSQLStatment()
+    public function testCreateSqlDeleteStatementReturnsSQLStatement()
     {
         $db = new DbLib('some/path');
 

@@ -4,6 +4,11 @@
     "port" : "3306",
     "username" : "myUsername",
     "password" : "SomePassword",
-    "database" : "OptionalSeeDocumentation"
+    "database" : "OptionalSeeDocumentation",
+    "pdoAttributes" : [
+      {
+        "PDO::ATTR_ERRMODE" : "PDO::ERRMODE_EXCEPTION"
+      }
+    ]
   }
 }

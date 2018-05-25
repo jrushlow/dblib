@@ -18,6 +18,8 @@ declare(strict_types=1);
 
 namespace Geeshoe\DbLib;
 
+use \PDO;
+
 /**
  * Class DbLib
  * @package Geeshoe\DbLib
@@ -117,9 +119,23 @@ class DbLib
                 $dsn .= ';dbname=' . $this->configJsonFile->database;
             }
 
-            return new \PDO($dsn, $username, $password);
+            $dbc = new PDO($dsn, $username, $password);
+
+            if (!empty($this->configJsonFile->pdoAttributes)) {
+                $attributes = $this->configJsonFile->pdoAttributes;
+
+                foreach ($attributes as $attribute) {
+                    if (!empty($attribute->value)) {
+                        $dbc->setAttribute(
+                            constant($attribute->attribute),
+                            constant($attribute->value)
+                        );
+                    }
+                }
+            }
+
+            return $dbc;
         }
-        //  $this->connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
     }
 
     /**
