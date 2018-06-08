@@ -14,10 +14,14 @@
   ~    limitations under the License.
   -->
 
-<phpunit colors="true">
+<phpunit colors="true"
+         bootstrap="bootstrap.php">
     <testsuites>
-        <testsuite name="DbLibTests">
-            <directory>tests</directory>
+        <testsuite name="UnitTests">
+            <directory>tests/UnitTests</directory>
+        </testsuite>
+        <testsuite name="FunctionalTests">
+            <directory>tests/FunctionTests</directory>
         </testsuite>
     </testsuites>
     <filter>
