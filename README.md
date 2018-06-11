@@ -6,7 +6,10 @@ Please note that this project is in initial development and as such, some docume
 
 ## Getting Started
 
-DbLib is intended to be fully compliant with [PSR-2](https://www.php-fig.org/psr/psr-2/)
+DbLib is intended to be fully compliant with 
+[PSR-1](https://www.php-fig.org/psr/psr-1/),
+[PSR-2](https://www.php-fig.org/psr/psr-2/),
+ & [PSR-4](https://www.php-fig.org/psr/psr-4/)
 
 ### Prerequisites
 
@@ -44,20 +47,53 @@ composer require geeshoe/dblib dev-develop
 
 ### Configure
 
-Copy the included sample_config.ini to a secure location outside of your projects
+DbLib Configuration parameters are set using the Json format.
+
+Copy the included dblibConfig_DIST.json to a secure location outside of your projects
  web root. 
  
-Change the values in the mysql section to reflect your database configuration.
+Change the values to reflect your database configuration.
 
 ```
-[config]
-[mysql]
-hostName = 127.0.0.1   //Points to the mysql server. Usually 127.0.0.1 or localhost 
-port = 3306   //Typically the mysql port is 3306
-dataBase = database   //The name of the database which you will be using.
-userName = user   //Both the username and password for the mysql account used to manipulate the mysql database
-passWord = password
+{
+  "dblibConfig" : {
+    "hostName" : "127.0.0.1",
+    "port" : "3306",
+    "username" : "myUsername",
+    "password" : "SomePassword",
+    "database" : "OptionalSeeDocumentation",
+    "pdoAttributes" : [
+      {
+        "PDO::ATTR_ERRMODE" : "PDO::ERRMODE_EXCEPTION"
+      }
+    ]
+  }
+}
 ```
+The ```"database"``` & ```"pdoAttributes"``` param's are not required. If the database
+is not specified in the config file, you must explicitly declare the database to 
+use in your SQL statements.
+
+I.e. ```'SELECT * FROM database.tableName';```
+
+[PDO Attributes](http://php.net/manual/en/pdo.setattribute.php) can be set in the config file
+as demonstrated above. More than one attribute can be set as follows:
+
+```
+"pdoAttributes" : [
+     {
+       "PDO::ATTR_ERRMODE" : "PDO::ERRMODE_EXCEPTION"
+     },
+     {
+       "PDO::ATTR_CASE" : "PDO::CASE_LOWER"
+     }
+]
+```
+
+[Persistent Connections](http://php.net/manual/en/pdo.connections.php) are planned in the future
+for DbLib, but currently are not supported. Because DbLib does not explicitly close PDO connections,
+it is possible to extend the DbLib class and override the ```connect()```method to set
+```PDO::ATTR_PERSISTENT => true```.
 
 ### Documentation
 
