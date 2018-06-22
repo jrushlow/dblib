@@ -93,7 +93,7 @@ class DbLibTest extends TestCase
                     }'
         );
         $db = new DbLib($file);
-        $this->expectException(\PDOException::class);
+        $this->expectException(DbLibException::class);
         $test = $this->invokeMethod($db, 'connect');
         self::assertInstanceOf(\PDO::class, $test);
     }

@@ -119,7 +119,15 @@ class DbLib
                 $dsn .= ';dbname=' . $this->configJsonFile->database;
             }
 
-            $dbc = new PDO($dsn, $username, $password);
+            try {
+                $dbc = new PDO($dsn, $username, $password);
+            } catch (\PDOException $ex) {
+                throw new DbLibException(
+                    'Unable to connect to database',
+                    0,
+                    $ex
+                );
+            }
 
             if (!empty($this->configJsonFile->pdoAttributes)) {
                 $attributes = $this->configJsonFile->pdoAttributes;
