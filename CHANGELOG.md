@@ -1,6 +1,11 @@
 ## DbLib ChangeLog
 *DbLib follows [Semantic Versioning 2.0.0](https://semver.org/)*
 
+### v0.5.1
+*Released - 2018-06-22*
+
+* Hotfix - Connection error's were not being thrown as DbLibExceptions as intended
+
 ### v0.5.0
 *Released - 2018-06-22*
 
