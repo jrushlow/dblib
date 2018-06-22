@@ -1,6 +1,13 @@
 ## DbLib ChangeLog
 *DbLib follows [Semantic Versioning 2.0.0](https://semver.org/)*
 
+### v0.5.0
+*Released - 2018-06-22*
+
+* Exceptions are now thrown as DbLibException instead of PDOException
+* Fixed copyright notice
+* Updated Test Suite
+
 ### v0.4.0
 *Released - 2018-06-11*
 

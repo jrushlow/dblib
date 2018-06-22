@@ -1,18 +1,18 @@
 <?php
-/*
- * Copyright 2018 Jesse Rushlow - Geeshoe Development
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+/**
+ * Copyright 2018 Geeshoe Development Services
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
  */
 declare(strict_types=1);
 
@@ -65,7 +65,7 @@ class DbLib
      * Parse the DbLib .json configuration file.
      *
      * @return bool Returns true if able to parse config file.
-     * @throws \Exception
+     * @throws DbLibException
      */
     protected function getDbLibConfig()
     {
@@ -77,10 +77,10 @@ class DbLib
                 $this->configJsonFile = $jsonConfig->dblibConfig;
                 return true;
             } else {
-                throw new \Exception('DbLib config file malformed.');
+                throw new DbLibException('DbLib config file malformed.');
             }
         } else {
-            throw new \Exception('Specified config file location does not exists for DbLib.');
+            throw new DbLibException('Specified config file location does not exists for DbLib.');
         }
     }
 
@@ -88,7 +88,7 @@ class DbLib
      * Creates new \PDO instance.
      *
      * @return \PDO
-     * @throws \Exception
+     * @throws DbLibException
      */
     protected function connect()
     {
@@ -109,7 +109,7 @@ class DbLib
                 if (!empty($this->configJsonFile->$configParam)) {
                     $$configParam = $this->configJsonFile->$configParam;
                 } else {
-                    throw new \Exception($exceptionMsg);
+                    throw new DbLibException($exceptionMsg);
                 }
             }
 
@@ -145,7 +145,7 @@ class DbLib
      *
      * @param string $sqlStatement
      *
-     * @throws \Exception
+     * @throws DbLibException
      */
     public function executeQueryWithNoReturn(string $sqlStatement)
     {
@@ -163,7 +163,7 @@ class DbLib
      * @param int $fetchStyle
      * @return mixed
      *
-     * @throws \Exception
+     * @throws DbLibException
      */
     public function executeQueryWithSingleReturn(string $sqlStatement, int $fetchStyle)
     {
@@ -180,7 +180,7 @@ class DbLib
      * @param int $fetchStyle
      * @return array
      *
-     * @throws \Exception
+     * @throws DbLibException
      */
     public function executeQueryWithAllReturned(string $sqlStatement, int $fetchStyle)
     {
@@ -198,7 +198,7 @@ class DbLib
      * @param string $sqlStatement
      * @param array $valuesArray
      *
-     * @throws \Exception
+     * @throws DbLibException
      */
     public function manipulateDataWithNoReturn(string $sqlStatement, array $valuesArray)
     {
@@ -223,7 +223,7 @@ class DbLib
      * @param int $fetchStyle
      * @return mixed
      *
-     * @throws \Exception
+     * @throws DbLibException
      */
     public function manipulateDataWithSingleReturn(
         string $sqlStatement,
@@ -254,7 +254,7 @@ class DbLib
      * @param int $fetchStyle
      * @return array
      *
-     * @throws \Exception
+     * @throws DbLibException
      */
     public function manipulateDataWithAllReturned(
         string $sqlStatement,
