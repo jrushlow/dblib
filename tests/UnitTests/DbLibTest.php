@@ -17,6 +17,7 @@
 namespace Geeshoe\DbLibTests;
 
 use Geeshoe\DbLib\DbLib;
+use Geeshoe\DbLib\DbLibException;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
 
@@ -35,7 +36,7 @@ class DbLibTest extends TestCase
     {
         $db = new DbLib('/some/dblib/path/to/config.json');
 
-        $this->expectException(\Exception::class);
+        $this->expectException(DbLibException::class);
         $this->expectExceptionMessage('Specified config file location does not exists for DbLib.');
         $this->invokeMethod($db, 'connect');
     }
@@ -60,7 +61,7 @@ class DbLibTest extends TestCase
 
         $db = new DbLib($file);
 
-        $this->expectException(\Exception::class);
+        $this->expectException(DbLibException::class);
         $this->expectExceptionMessage('DbLib config file malformed.');
 
         $this->invokeMethod($db, 'connect');
@@ -92,7 +93,7 @@ class DbLibTest extends TestCase
                     }'
         );
         $db = new DbLib($file);
-        $this->expectException(\Exception::class);
+        $this->expectException(\PDOException::class);
         $test = $this->invokeMethod($db, 'connect');
         self::assertInstanceOf(\PDO::class, $test);
     }
@@ -110,7 +111,7 @@ class DbLibTest extends TestCase
         file_put_contents($file, '{"dblibConfig" : {"hostName" : ""}}');
 
         $db = new DbLib($file);
-        $this->expectException(\Exception::class);
+        $this->expectException(DbLibException::class);
         $this->expectExceptionMessage('hostName is not set in the DbLib config file.');
         $this->invokeMethod($db, 'connect');
     }
@@ -121,7 +122,7 @@ class DbLibTest extends TestCase
         file_put_contents($file, '{"dblibConfig" : {"hostName" : "1","port":""}}');
 
         $db = new DbLib($file);
-        $this->expectException(\Exception::class);
+        $this->expectException(DbLibException::class);
         $this->expectExceptionMessage('port is not set in the DbLib config file.');
         $this->invokeMethod($db, 'connect');
     }
@@ -135,7 +136,7 @@ class DbLibTest extends TestCase
         );
 
         $db = new DbLib($file);
-        $this->expectException(\Exception::class);
+        $this->expectException(DbLibException::class);
         $this->expectExceptionMessage('username is not set in the DbLib config file.');
         $this->invokeMethod($db, 'connect');
     }
@@ -149,7 +150,7 @@ class DbLibTest extends TestCase
         );
 
         $db = new DbLib($file);
-        $this->expectException(\Exception::class);
+        $this->expectException(DbLibException::class);
         $this->expectExceptionMessage('password is not set in the DbLib config file.');
         $this->invokeMethod($db, 'connect');
     }
