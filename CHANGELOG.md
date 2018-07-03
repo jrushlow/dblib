@@ -1,6 +1,11 @@
 ## DbLib ChangeLog
 *DbLib follows [Semantic Versioning 2.0.0](https://semver.org/)*
 
+### v0.5.2
+*Released - 2018-07-03*
+
+* Hotfix - PDO Attributes were not being set if defined in the config file.
+
 ### v0.5.1
 *Released - 2018-06-22*
 

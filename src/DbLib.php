@@ -133,11 +133,13 @@ class DbLib
                 $attributes = $this->configJsonFile->pdoAttributes;
 
                 foreach ($attributes as $attribute) {
-                    if (!empty($attribute->value)) {
-                        $dbc->setAttribute(
-                            constant($attribute->attribute),
-                            constant($attribute->value)
-                        );
+                    foreach ($attribute as $key => $value) {
+                        if (!empty($value)) {
+                            $dbc->setAttribute(
+                                constant($key),
+                                constant($value)
+                            );
+                        }
                     }
                 }
             }
