@@ -175,7 +175,7 @@ class DbLib
      *
      * @throws DbLibException
      */
-    public function executeQueryWithSingleReturn(string $sqlStatement, int $fetchStyle)
+    public function executeQueryWithSingleReturn(string $sqlStatement, int $fetchStyle = PDO::FETCH_ASSOC)
     {
         $result = $this->connect()->query($sqlStatement)->fetch($fetchStyle);
         return $result;
@@ -192,7 +192,7 @@ class DbLib
      *
      * @throws DbLibException
      */
-    public function executeQueryWithAllReturned(string $sqlStatement, int $fetchStyle)
+    public function executeQueryWithAllReturned(string $sqlStatement, int $fetchStyle = PDO::FETCH_ASSOC)
     {
         $result = $this->connect()->query($sqlStatement)->fetchAll($fetchStyle);
         return $result;
@@ -238,7 +238,7 @@ class DbLib
     public function manipulateDataWithSingleReturn(
         string $sqlStatement,
         array $valuesArray,
-        int $fetchStyle
+        int $fetchStyle = PDO::FETCH_ASSOC
     ) {
         $stmt = $this->connect()->prepare($sqlStatement);
 
@@ -269,7 +269,7 @@ class DbLib
     public function manipulateDataWithAllReturned(
         string $sqlStatement,
         array $valuesArray,
-        int $fetchStyle
+        int $fetchStyle = PDO::FETCH_ASSOC
     ) {
         $stmt = $this->connect()->prepare($sqlStatement);
 
