@@ -23,7 +23,9 @@
     ],
     "require" : {
         "php" : "^7.1",
-        "ext-pdo_mysql" : "*"
+        "ext-pdo_mysql" : "*",
+        "ext-pdo": "*",
+        "ext-json": "*"
     },
     "autoload": {
         "psr-4": {
