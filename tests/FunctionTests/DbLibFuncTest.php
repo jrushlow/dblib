@@ -18,7 +18,7 @@ declare(strict_types=1);
 
 namespace Geeshoe\DbLibTests\FunctionTests;
 
-use Geeshoe\DbLib\DbLib;
+use Geeshoe\DbLib\Core\DbLib;
 use PHPUnit\Framework\TestCase;
 
 class DbLibFuncTest extends TestCase

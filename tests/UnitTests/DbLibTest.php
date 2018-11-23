@@ -16,8 +16,8 @@
  */
 namespace Geeshoe\DbLibTests;
 
-use Geeshoe\DbLib\DbLib;
-use Geeshoe\DbLib\DbLibException;
+use Geeshoe\DbLib\Core\DbLib;
+use Geeshoe\DbLib\Exceptions\DbLibException;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
 
