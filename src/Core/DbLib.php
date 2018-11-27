@@ -19,7 +19,7 @@ declare(strict_types=1);
 namespace Geeshoe\DbLib\Core;
 
 use Geeshoe\DbLib\Exceptions\DbLibException;
-use \PDO;
+use PDO;
 
 /**
  * Class DbLib
@@ -33,16 +33,6 @@ class DbLib
     protected $connection = null;
 
     /**
-     * @var null|string
-     */
-    protected $configFilePath = null;
-
-    /**
-     * @var null|object
-     */
-    protected $configJsonFile = null;
-
-    /**
      * @var array Populated by the create methods below.
      */
     public $insert = array();
@@ -51,103 +41,6 @@ class DbLib
      * @var array Populated by the create methods below.
      */
     public $values = array();
-
-    /**
-     * DbLib constructor.
-     *
-     * @param string $absoluteConfigFilePath Absolute path to config file.
-     */
-    public function __construct(string $absoluteConfigFilePath)
-    {
-        $this->configFilePath = $absoluteConfigFilePath;
-    }
-
-    /**
-     * Parse the DbLib .json configuration file.
-     *
-     * @return bool Returns true if able to parse config file.
-     * @throws DbLibException
-     */
-    protected function getDbLibConfig()
-    {
-        if (is_file($this->configFilePath)) {
-            $jsonConfig = file_get_contents($this->configFilePath);
-            $jsonConfig = json_decode($jsonConfig);
-
-            if (!empty($jsonConfig->dblibConfig) && is_object($jsonConfig->dblibConfig)) {
-                $this->configJsonFile = $jsonConfig->dblibConfig;
-                return true;
-            } else {
-                throw new DbLibException('DbLib config file malformed.');
-            }
-        } else {
-            throw new DbLibException('Specified config file location does not exists for DbLib.');
-        }
-    }
-
-    /**
-     * Creates new \PDO instance.
-     *
-     * @return \PDO
-     * @throws DbLibException
-     */
-    protected function connect()
-    {
-        if ($this->getDbLibConfig()) {
-            $arrays = array(
-                'hostName' => 'hostName is not set in the DbLib config file.',
-                'port' => 'port is not set in the DbLib config file.',
-                'username' => 'username is not set in the DbLib config file.',
-                'password' => 'password is not set in the DbLib config file.'
-            );
-
-            $hostName = null;
-            $port = null;
-            $username = null;
-            $password = null;
-
-            foreach ($arrays as $configParam => $exceptionMsg) {
-                if (!empty($this->configJsonFile->$configParam)) {
-                    $$configParam = $this->configJsonFile->$configParam;
-                } else {
-                    throw new DbLibException($exceptionMsg);
-                }
-            }
-
-            $dsn = 'mysql:host=' . $hostName . ';port=' . $port;
-
-            if (!empty($this->configJsonFile->database)) {
-                $dsn .= ';dbname=' . $this->configJsonFile->database;
-            }
-
-            try {
-                $dbc = new PDO($dsn, $username, $password);
-            } catch (\PDOException $ex) {
-                throw new DbLibException(
-                    'Unable to connect to database',
-                    0,
-                    $ex
-                );
-            }
-
-            if (!empty($this->configJsonFile->pdoAttributes)) {
-                $attributes = $this->configJsonFile->pdoAttributes;
-
-                foreach ($attributes as $attribute) {
-                    foreach ($attribute as $key => $value) {
-                        if (!empty($value)) {
-                            $dbc->setAttribute(
-                                constant($key),
-                                constant($value)
-                            );
-                        }
-                    }
-                }
-            }
-
-            return $dbc;
-        }
-    }
 
     /**
      * Execute a statement without returning any affected row's.
