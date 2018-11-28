@@ -22,6 +22,7 @@
 
 namespace Geeshoe\DbLibTests;
 
+use Geeshoe\DbLib\Config\AbstractConfigObject;
 use Geeshoe\DbLib\Config\ConfigJsonAdapter;
 use Geeshoe\DbLib\Exceptions\DbLibException;
 use org\bovigo\vfs\vfsStream;
@@ -151,5 +152,6 @@ class ConfigJsonAdapterTest extends TestCase
         $results = $config->getParams();
 
         $this->assertSame($key, $results->$property);
+        $this->assertInstanceOf(AbstractConfigObject::class, $results);
     }
 }
