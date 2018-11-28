@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 namespace Geeshoe\DbLib\Core;
 
+use Geeshoe\DbLib\Config\AbstractConfigObject;
 use Geeshoe\DbLib\Exceptions\DbLibException;
 use PDO;
 
@@ -25,13 +26,8 @@ use PDO;
  * Class DbLib
  * @package Geeshoe\DbLib
  */
-class DbLib
+class DbLib extends AbstractConnection
 {
-    /**
-     * @var null|\PDO
-     */
-    protected $connection = null;
-
     /**
      * @var array Populated by the create methods below.
      */
@@ -41,6 +37,16 @@ class DbLib
      * @var array Populated by the create methods below.
      */
     public $values = array();
+
+    /**
+     * DbLib constructor.
+     *
+     * @param AbstractConfigObject $configObject
+     */
+    public function __construct(AbstractConfigObject $configObject)
+    {
+        $this->credentials = $configObject;
+    }
 
     /**
      * Execute a statement without returning any affected row's.
@@ -53,7 +59,7 @@ class DbLib
      */
     public function executeQueryWithNoReturn(string $sqlStatement)
     {
-        $this->connect()->exec($sqlStatement);
+        $this->getConnection()->exec($sqlStatement);
     }
 
     /**
@@ -71,7 +77,7 @@ class DbLib
      */
     public function executeQueryWithSingleReturn(string $sqlStatement, int $fetchStyle = PDO::FETCH_ASSOC)
     {
-        $result = $this->connect()->query($sqlStatement)->fetch($fetchStyle);
+        $result = $this->getConnection()->query($sqlStatement)->fetch($fetchStyle);
         return $result;
     }
 
@@ -88,7 +94,7 @@ class DbLib
      */
     public function executeQueryWithAllReturned(string $sqlStatement, int $fetchStyle = PDO::FETCH_ASSOC)
     {
-        $result = $this->connect()->query($sqlStatement)->fetchAll($fetchStyle);
+        $result = $this->getConnection()->query($sqlStatement)->fetchAll($fetchStyle);
         return $result;
     }
 
@@ -106,7 +112,7 @@ class DbLib
      */
     public function manipulateDataWithNoReturn(string $sqlStatement, array $valuesArray)
     {
-        $stmt = $this->connect()->prepare($sqlStatement);
+        $stmt = $this->getConnection()->prepare($sqlStatement);
 
         foreach ($valuesArray as $key => $value) {
             $stmt->bindValue($key, $value);
@@ -134,7 +140,7 @@ class DbLib
         array $valuesArray,
         int $fetchStyle = PDO::FETCH_ASSOC
     ) {
-        $stmt = $this->connect()->prepare($sqlStatement);
+        $stmt = $this->getConnection()->prepare($sqlStatement);
 
         foreach ($valuesArray as $key => $value) {
             $stmt->bindValue($key, $value);
@@ -165,7 +171,7 @@ class DbLib
         array $valuesArray,
         int $fetchStyle = PDO::FETCH_ASSOC
     ) {
-        $stmt = $this->connect()->prepare($sqlStatement);
+        $stmt = $this->getConnection()->prepare($sqlStatement);
 
         foreach ($valuesArray as $key => $value) {
             $stmt->bindValue($key, $value);
