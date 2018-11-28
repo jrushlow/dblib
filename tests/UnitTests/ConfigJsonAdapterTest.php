@@ -86,7 +86,7 @@ class ConfigJsonAdapterTest extends TestCase
         $config = new ConfigJsonAdapter($filePath);
         $this->expectException(DbLibException::class);
         $this->expectExceptionMessage($exceptionMsg);
-        $config->getParams();
+        $config->initialize();
     }
 
     /**
@@ -117,20 +117,39 @@ class ConfigJsonAdapterTest extends TestCase
         $config = new ConfigJsonAdapter('vfs://configTest/config3');
         $this->expectException(DbLibException::class);
         $this->expectExceptionMessage('DbLib Json Adapter requires ' . $field . ' to be set in the config file.');
-        $config->getParams();
+        $config->initialize();
     }
 
     /**
-     * If the config file is valid, test everything works as intended.
+     * Data provider for testGetParamsReturnsParamsFromJsonConfigFile
+     *
+     * @return array
      */
-    public function testGetParamsReturnsParamsFromJsonConfigFile(): void
+    public function goodParamsDataProvider(): array
+    {
+        return [
+            ['host', 'host'],
+            ['port', 12],
+            ['database', 'db'],
+            ['user', 'user'],
+            ['password', 'pass']
+        ];
+    }
+    /**
+     * If the config file is valid, test everything works as intended.
+     *
+     * @dataProvider goodParamsDataProvider
+     *
+     * @param string $property
+     * @param mixed $key
+     */
+    public function testGetParamsReturnsParamsFromJsonConfigFile(string $property, $key): void
     {
         file_put_contents('vfs://configTest/config4', '{"dblibConfig":{"hostName": "host","port":12,"database":"db","userName":"user","password":"pass"}}');
         $config = new ConfigJsonAdapter('vfs://configTest/config4');
+        $config->initialize();
         $results = $config->getParams();
-        self::assertSame(
-            ['host' => 'host', 'port' => 12, 'database' => 'db', 'user' => 'user', 'password' => 'pass'],
-            $results
-        );
+
+        $this->assertSame($key, $results->$property);
     }
 }

@@ -96,43 +96,18 @@ class ConfigJsonAdapter extends AbstractConfigObject
     }
 
     /**
-     * @param string $host
-     * @param int    $port
-     * @param string $database
-     * @param string $user
-     * @param string $password
-     */
-    public function setParams(
-        string $host,
-        int $port,
-        string $database,
-        string $user,
-        string $password
-    ): void {
-        $this->host = filter_var($host, FILTER_SANITIZE_URL);
-        $this->port = (int) filter_var($port, FILTER_VALIDATE_INT);
-        $this->database = filter_var($database, FILTER_SANITIZE_STRING);
-        $this->user = filter_var($user, FILTER_SANITIZE_STRING);
-        $this->password = filter_var($password, FILTER_SANITIZE_STRING);
-    }
-
-    /**
-     * Entry point to parse the json config file and return the required values.
+     * Initialize the DbLib Configuration.
      *
-     * @return array
+     * {@inheritdoc}
      */
-    public function getParams(): array
-    {
+    public function initialize(): void {
         $this->validateConfigFile();
         $this->validateConfigObject();
-        $this->setParams(
-            $this->jsonObject->hostName,
-            $this->jsonObject->port,
-            $this->jsonObject->database,
-            $this->jsonObject->userName,
-            $this->jsonObject->password
-        );
 
-        return parent::getParams();
+        $this->host = filter_var($this->jsonObject->hostName, FILTER_SANITIZE_URL);
+        $this->port = (int) filter_var($this->jsonObject->port, FILTER_VALIDATE_INT);
+        $this->database = filter_var($this->jsonObject->database, FILTER_SANITIZE_STRING);
+        $this->user = filter_var($this->jsonObject->userName, FILTER_SANITIZE_STRING);
+        $this->password = filter_var($this->jsonObject->password, FILTER_SANITIZE_STRING);
     }
 }

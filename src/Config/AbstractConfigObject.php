@@ -28,59 +28,45 @@ namespace Geeshoe\DbLib\Config;
  *
  * @package Geeshoe\DbLib\Config
  */
-abstract class AbstractConfigObject implements ConfigInterface
+abstract class AbstractConfigObject
 {
     /**
      * @var string|null
      */
-    protected $host;
+    public $host;
 
     /**
      * @var int|null
      */
-    protected $port;
+    public $port;
 
     /**
      * @var string|null
      */
-    protected $database;
+    public $database;
 
     /**
      * @var string|null
      */
-    protected $user;
+    public $user;
 
     /**
      * @var string|null
      */
-    protected $password;
+    public $password;
 
     /**
-     * @param string $host
-     * @param int    $port
-     * @param string $database
-     * @param string $user
-     * @param string $password
+     * Methodology is to initialize the configuration at the start of the
+     * application. Then call getParams() when needed within the application to
+     * reduce overhead.
      */
-    abstract public function setParams(
-        string $host,
-        int $port,
-        string $database,
-        string $user,
-        string $password
-    ): void;
+    abstract protected function initialize(): void;
 
     /**
-     * @return array Database param's from json config file.
+     * @return AbstractConfigObject
      */
-    public function getParams(): array
+    public function getParams(): self
     {
-        return [
-            'host' => $this->host,
-            'port' => $this->port,
-            'database' => $this->database,
-            'user' => $this->user,
-            'password' => $this->password
-        ];
+        return $this;
     }
 }
