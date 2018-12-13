@@ -56,12 +56,26 @@ class DbLibFuncTest extends TestCase
         $this->pdo = null;
     }
 
-    public function testExecuteWithNoReturnAndSingleReturn()
+    public function testExecuteWithNoReturnExecutesSQLStmt()
     {
+        $sql = 'INSERT INTO test SET row1 = 1, row2 = 2';
+        $this->db->executeQueryWithNoReturn($sql);
 
-        $this->db->executeQueryWithNoReturn('INSERT INTO test SET row1 = 1, row2 = 2');
+        $query = $this->pdo->query('SELECT * FROM dblibTest.test;');
+        $results = $query->fetch(\PDO::FETCH_ASSOC);
 
-        $query = $this->db->executeQueryWithSingleReturn('SELECT * FROM dblibTest.test', \PDO::FETCH_ASSOC);
+        $this->assertSame(['row1' => '1', 'row2' => '2'], $results);
+    }
+
+    public function testExecuteWithSingleReturnGetsAnArrayFromDatabase()
+    {
+        $sql = 'INSERT INTO dblibTest.test SET row1 = 1, row2 = 2';
+        $this->pdo->exec($sql);
+
+        $query = $this->db->executeQueryWithSingleReturn(
+            'SELECT * FROM dblibTest.test',
+            \PDO::FETCH_ASSOC
+        );
 
         $expected = array(
             'row1' => 1,

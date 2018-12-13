@@ -67,9 +67,7 @@ class DbLib extends AbstractConnection
     public function executeQueryWithSingleReturn(string $sqlStatement, int $fetchStyle = PDO::FETCH_ASSOC)
     {
         $result = $this->connection->query($sqlStatement);
-        $result->fetch($fetchStyle);
-
-        return $result;
+        return $result->fetch($fetchStyle);
     }
 
     /**
