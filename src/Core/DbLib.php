@@ -46,7 +46,7 @@ class DbLib extends AbstractConnection
      *
      * @throws DbLibException
      */
-    public function executeQueryWithNoReturn(string $sqlStatement)
+    public function executeQueryWithNoReturn(string $sqlStatement): void
     {
         $this->connection->exec($sqlStatement);
     }
@@ -66,7 +66,9 @@ class DbLib extends AbstractConnection
      */
     public function executeQueryWithSingleReturn(string $sqlStatement, int $fetchStyle = PDO::FETCH_ASSOC)
     {
-        $result = $this->connection->query($sqlStatement)->fetch($fetchStyle);
+        $result = $this->connection->query($sqlStatement);
+        $result->fetch($fetchStyle);
+
         return $result;
     }
 
@@ -81,10 +83,10 @@ class DbLib extends AbstractConnection
      *
      * @throws DbLibException
      */
-    public function executeQueryWithAllReturned(string $sqlStatement, int $fetchStyle = PDO::FETCH_ASSOC)
+    public function executeQueryWithAllReturned(string $sqlStatement, int $fetchStyle = PDO::FETCH_ASSOC): array
     {
-        $result = $this->connection->query($sqlStatement)->fetchAll($fetchStyle);
-        return $result;
+        $query = $this->connection->query($sqlStatement);
+        return $query->fetchAll($fetchStyle);
     }
 
     /**
@@ -99,7 +101,7 @@ class DbLib extends AbstractConnection
      *
      * @throws DbLibException
      */
-    public function manipulateDataWithNoReturn(string $sqlStatement, array $valuesArray)
+    public function manipulateDataWithNoReturn(string $sqlStatement, array $valuesArray): void
     {
         $stmt = $this->connection->prepare($sqlStatement);
 
@@ -137,8 +139,7 @@ class DbLib extends AbstractConnection
 
         $stmt->execute();
 
-        $results = $stmt->fetch($fetchStyle);
-        return $results;
+        return $stmt->fetch($fetchStyle);
     }
 
     /**
@@ -159,7 +160,7 @@ class DbLib extends AbstractConnection
         string $sqlStatement,
         array $valuesArray,
         int $fetchStyle = PDO::FETCH_ASSOC
-    ) {
+    ): array {
         $stmt = $this->connection->prepare($sqlStatement);
 
         foreach ($valuesArray as $key => $value) {
@@ -168,8 +169,7 @@ class DbLib extends AbstractConnection
 
         $stmt->execute();
 
-        $results = $stmt->fetchAll($fetchStyle);
-        return $results;
+        return $stmt->fetchAll($fetchStyle);
     }
 
     /**
@@ -186,12 +186,12 @@ class DbLib extends AbstractConnection
      *
      * @return void
      */
-    public function createDataArray(string $typeOfArray, array $userSuppliedData)
+    public function createDataArray(string $typeOfArray, array $userSuppliedData): void
     {
         foreach (array_keys($userSuppliedData) as $key) {
-            if ($typeOfArray == 'insert') {
+            if ($typeOfArray === 'insert') {
                 $this->insert[] = $key;
-            } elseif ($typeOfArray == 'manipulate') {
+            } elseif ($typeOfArray === 'manipulate') {
                 $this->insert[] = '`' . $key . '`' . ' = :' . $key;
             }
             //@TODO - Throw exception if wrong $typeOfStatement is entered.
@@ -208,7 +208,7 @@ class DbLib extends AbstractConnection
      *
      * @return string Returns a query statement to be used for the manipulate methods.
      */
-    public function createSqlInsertStatement(string $insertInWhatTable)
+    public function createSqlInsertStatement(string $insertInWhatTable): string
     {
         $statement = 'INSERT INTO `'.$insertInWhatTable.'`('
             . implode(', ', $this->insert) .
@@ -233,8 +233,8 @@ class DbLib extends AbstractConnection
         string $updateWhatTable,
         string $updateByWhatColumn,
         string $updateWhatId
-    ) {
-        return 'UPDATE `'.$updateWhatTable.'` SET ' . implode(", ", $this->insert) . ' WHERE `'
+    ): string {
+        return 'UPDATE `'.$updateWhatTable.'` SET ' . implode(', ', $this->insert) . ' WHERE `'
             .$updateByWhatColumn.'` = ' . $updateWhatId;
     }
 
@@ -253,7 +253,7 @@ class DbLib extends AbstractConnection
         string $deleteFromWhichTable,
         string $deleteByWhatColumn,
         string $deleteWhatId
-    ) {
+    ): string {
         return 'DELETE FROM `' . $deleteFromWhichTable . '` WHERE `'
             . $deleteByWhatColumn . '` = ' . $deleteWhatId . ';';
     }
