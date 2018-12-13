@@ -18,25 +18,25 @@ namespace Geeshoe\DbLibTests;
 
 use Geeshoe\DbLib\Config\ConfigJsonAdapter;
 use Geeshoe\DbLib\Core\DbLib;
-use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
 
 class DbLibTest extends TestCase
 {
-    public $stream;
-
     /**
      * @var DbLib
      */
     public $db;
 
+    /**
+     * @inheritdoc
+     */
     public function setUp()
     {
-        $this->stream = vfsStream::setup('db');
-        vfsStream::newFile('config')->at($this->stream);
-        file_put_contents('vfs://db/config', '{"dblibConfig":{"hostName": "host","port":12,"database":"db","userName":"user","password":"pass"}}');
-        $config = new ConfigJsonAdapter('vfs://db/config');
-        $this->db = new DbLib($config->getParams());
+        $pdo =$this->getMockBuilder(\PDO::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->db = new DbLib($pdo);
     }
 
     public function testCreateDataArrayCreatesInsertArray()

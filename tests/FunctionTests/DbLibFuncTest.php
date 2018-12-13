@@ -18,7 +18,6 @@ declare(strict_types=1);
 
 namespace Geeshoe\DbLibTests\FunctionTests;
 
-use Geeshoe\DbLib\Config\ConfigJsonAdapter;
 use Geeshoe\DbLib\Core\DbLib;
 use PHPUnit\Framework\TestCase;
 
@@ -30,12 +29,13 @@ class DbLibFuncTest extends TestCase
      */
     public $db;
 
+    /**
+     * @var \PDO
+     */
+    public $pdo;
+
     protected function setUp()/* The :void return type declaration that should be here would cause a BC issue */
     {
-        $file = __DIR__;
-        $config = new ConfigJsonAdapter(__DIR__ . '/credentials/dblibConfig.json');
-        $config->initialize();
-        $this->db = new DbLib($config->getParams());
         $pdo = new \PDO('mysql:host=' . HOST . ';port=' . PORT, USER, PASS);
 
         $pdo->exec('CREATE DATABASE IF NOT EXISTS `dblibTest`');
@@ -44,15 +44,16 @@ class DbLibFuncTest extends TestCase
                               row2 INT
                   )');
 
-        $pdo = null;
+        $this->pdo = $pdo;
+
+        $pdo->exec('USE dblibTest;');
+        $this->db = new DbLib($pdo);
     }
 
     protected function tearDown()/* The :void return type declaration that should be here would cause a BC issue */
     {
-        $pdo = new \PDO('mysql:host=' . HOST . ';port=' . PORT, USER, PASS);
-
-        $pdo->exec('DROP DATABASE `dblibTest`');
-        $pdo = null;
+        $this->pdo->exec('DROP DATABASE `dblibTest`');
+        $this->pdo = null;
     }
 
     public function testExecuteWithNoReturnAndSingleReturn()

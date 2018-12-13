@@ -23,9 +23,6 @@ declare(strict_types=1);
 
 namespace Geeshoe\DbLib\Core;
 
-use Geeshoe\DbLib\Config\AbstractConfigObject;
-use Geeshoe\DbLib\Exceptions\DbLibException;
-
 /**
  * Class AbstractConnection
  *
@@ -34,29 +31,17 @@ use Geeshoe\DbLib\Exceptions\DbLibException;
 abstract class AbstractConnection
 {
     /**
-     * @var AbstractConfigObject
+     * @var \PDO
      */
-    protected $credentials;
+    protected $connection;
 
     /**
-     * Create a PDO Connection
+     * AbstractConnection constructor.
      *
-     * @return \PDO
+     * @param \PDO $connection
      */
-    protected function getConnection(): \PDO
+    public function __construct(\PDO $connection)
     {
-        $dsn = 'mysql:host=' . $this->credentials->host;
-
-        if ($this->credentials->database !== null) {
-            $dsn .= ';dbname=' . $this->credentials->database;
-        }
-
-        try {
-            $connection = new \PDO($dsn, $this->credentials->user, $this->credentials->password);
-        } catch (\PDOException $exception) {
-            throw new DbLibException('Connection error', $exception->getCode(), $exception);
-        }
-
-        return $connection;
+        $this->connection = $connection;
     }
 }
