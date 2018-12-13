@@ -32,33 +32,97 @@ use Geeshoe\DbLib\Exceptions\DbLibQueryException;
  */
 class Objects extends AbstractConnection
 {
-    /** @noinspection PhpUndefinedClassInspection */
     /**
-     * @param string $sqlStmt
-     * @param string $className
+     * Check if a query was successfully executed on the database.
      *
-     * @return object
+     * @param string $sqlStmt       SQL statement to query. 'SELECT * FROM table;'
+     * @param string $className     Class to be returned as a result. SomeClass::class
+     *
+     * @return \PDOStatement
+     *
+     * @throws DbLibQueryException  Thrown if \PDO::query fails to execute a statement.
+     */
+    protected function makeQuery(string $sqlStmt, string $className): \PDOStatement
+    {
+        $statement = $this->connection->query($sqlStmt, \PDO::FETCH_CLASS, $className);
+
+        if ($statement === false) {
+            throw new DbLibQueryException(
+                'PDO::query failed to execute statement. Check SQL syntax and/or class name.'
+            );
+        }
+
+        return $statement;
+    }
+
+    /**
+     * Check if the query executed returned a result.
+     *
+     * @param mixed $result         After calling $query->fetch*(); The result is either bool|object.
+     *
+     * @return array|object         Returns either an array of objects or a single object.
      *
      * @throws DbLibQueryException
      */
-    public function queryDBGetSingleResultAsClass(string $sqlStmt, string $className): object
+    protected function checkResultForFailure($result)
     {
-        $query = $this->connection->query($sqlStmt, \PDO::FETCH_CLASS, $className);
-
-        if ($query === false) {
+        if ($result === false) {
             throw new DbLibQueryException(
-                'Query returned false. Check SQL syntax and/or class name.'
+                '\PDOStatement::fetch returned false. Requested record does not exist.'
             );
         }
+
+        return $result;
+    }
+
+    /** @noinspection PhpUndefinedClassInspection */
+    /**
+     * Executes a SQL statement returning a single object as the result.
+     *
+     * This method is not safe to use with untrusted data. Use prepared statements instead.
+     * Method will return a single object upon success, or throw an exception is no result
+     * is found.
+     *
+     * @param string $sqlStmt       SQL statement to be executed. 'SELECT * FROM table;'.
+     * @param string $className     Class to be returned as a result. SomeClass::class
+     *
+     * @return object               User defined object
+     *
+     * @throws DbLibQueryException  Thrown if \PDO::query fails to execute a statement or
+     *                              if no results were found upon executing the query. I.e.
+     *                              \PDOStatement::fetch() returns false.
+     */
+    public function queryDBGetSingleResultAsClass(string $sqlStmt, string $className): object
+    {
+        $query = $this->makeQuery($sqlStmt, $className);
 
         $result = $query->fetch();
         $query->closeCursor();
 
-        if ($result === false) {
-            throw new DbLibQueryException(
-                'Fetch returned false. Requested record does not exist.'
-            );
-        }
+        return $this->checkResultForFailure($result);
+    }
+
+    /**
+     * Executes a SQL statement returning an array of objects.
+     *
+     * This method is not safe to use with untrusted data. Use prepared statements instead.
+     * Method will return either an array of predefined objects i.e. [MyObject::class, MyObject::class],
+     * or an empty array if no results exist.
+     *
+     * @param string $sqlStmt       SQL statement to be executed. 'SELECT * FROM table;'.
+     * @param string $className     Class to be returned as a result. SomeClass::class
+     *
+     * @return array                Returns an array of objects [Object1::class, Object1::class]
+     *                              or an empty array if no results exist.
+     *
+     * @throws DbLibQueryException  Thrown if \PDO::query fails to execute a statement.
+     */
+    public function queryDbGetAllResultsAsClass(string $sqlStmt, string $className): array
+    {
+        $query = $this->makeQuery($sqlStmt, $className);
+
+        $result = $query->fetchAll();
+        $query->closeCursor();
 
         return $result;
     }

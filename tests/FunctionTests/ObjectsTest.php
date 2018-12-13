@@ -78,7 +78,7 @@ class ObjectsTest extends TestCase
     public function testQueryDBGetSingleClassThrowsExceptionWhenRecordDoesntExist(): void
     {
         $this->expectException(DbLibQueryException::class);
-        $this->expectExceptionMessage('Fetch returned false. Requested record does not exist.');
+        $this->expectExceptionMessage('\PDOStatement::fetch returned false. Requested record does not exist.');
 
         $this->db->queryDBGetSingleResultAsClass(
             'SELECT * FROM test WHERE row1 = 16',
@@ -89,8 +89,9 @@ class ObjectsTest extends TestCase
     public function testQueryDBGetSingleResultAsClassThrowsExceptionWithMalformedSQL(): void
     {
         $this->expectException(DbLibQueryException::class);
-        $this->expectExceptionMessage('Query returned false. Check SQL syntax and/or class name.');
+        $this->expectExceptionMessage('PDO::query failed to execute statement. Check SQL syntax and/or class name.');
 
+        /** @noinspection SyntaxError */
         $this->db->queryDBGetSingleResultAsClass(
             'SELECT * FROM test WHRE row1 = 1',
             TestObject1::class
@@ -102,11 +103,42 @@ class ObjectsTest extends TestCase
         $this->pdo->exec('INSERT INTO dblibTest.test SET row1 = 1, row2 = 2;');
 
         $this->expectException(DbLibQueryException::class);
-        $this->expectExceptionMessage('Query returned false. Check SQL syntax and/or class name.');
+        $this->expectExceptionMessage('PDO::query failed to execute statement. Check SQL syntax and/or class name.');
 
+        /** @noinspection PhpUndefinedClassInspection */
         $this->db->queryDBGetSingleResultAsClass(
             'SELECT * FROM test WHERE row1 = 1',
             NonExistentClass::class
         );
+    }
+
+    public function testQueryGetAllResultsAsClassReturnsAnArrayOfObjects(): void
+    {
+        $this->pdo->exec('INSERT INTO dblibTest.test SET row1 = 1, row2 = 2;');
+        $this->pdo->exec('INSERT INTO dblibTest.test SET row1 = 2, row2 = 2;');
+
+        $query = $this->db->queryDbGetAllResultsAsClass(
+            'SELECT * FROM test;',
+            TestObject1::class
+        );
+
+        $this->assertIsArray($query);
+        $this->assertInstanceOf(TestObject1::class, $query[0]);
+        $this->assertInstanceOf(TestObject1::class, $query[1]);
+
+        $this->assertSame($query[0]->row1, '1');
+        $this->assertSame($query[0]->row2, '2');
+        $this->assertSame($query[1]->row1, '2');
+        $this->assertSame($query[1]->row2, '2');
+    }
+
+    public function testQueryAllReturnsAnEmptyArrayIfNoResultsExist(): void
+    {
+        $query = $this->db->queryDbGetAllResultsAsClass(
+            'SELECT * FROM test;',
+            TestObject1::class
+        );
+
+        $this->assertSame([], $query);
     }
 }
