@@ -171,6 +171,8 @@ class DbLib extends AbstractConnection
     }
 
     /**
+     * This method has been replaced by Statements::prepareInsertQueryData.
+     *
      * Creates an array of data to be used in conjunction with the manipulate methods.
      *
      * When the method is called, it populates both the insert and values properties.
@@ -178,6 +180,8 @@ class DbLib extends AbstractConnection
      * use manipulate.
      *
      * See documentation for further examples and use cases.
+     *
+     * @deprecated
      *
      * @param string $typeOfArray Value should be either "insert" or "manipulate"
      * @param array $userSuppliedData
@@ -198,9 +202,13 @@ class DbLib extends AbstractConnection
     }
 
     /**
+     * This method has been replaced by Statements::prepareInsertQueryData.
+     *
      * Creates a insert statement. Must call the createDataArray method first!
      *
      * See documentation for further examples and use cases.
+     *
+     * @deprecated
      *
      * @param string $insertInWhatTable
      *
