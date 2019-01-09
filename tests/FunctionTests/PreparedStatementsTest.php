@@ -24,6 +24,8 @@ namespace Geeshoe\DbLibTests\FunctionTests;
 
 use Geeshoe\DbLib\Core\PreparedStatements;
 use Geeshoe\DbLib\Exceptions\DbLibException;
+use Geeshoe\DbLib\Exceptions\DbLibQueryException;
+use Geeshoe\DbLib\TestObject1;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -94,6 +96,51 @@ class PreparedStatementsTest extends TestCase
         $this->prepStmt->executePreparedInsertQuery(
             'wrongTable',
             ['1' => '1']
+        );
+    }
+
+    public function testPreparedFetchAsClassReturnClass(): void
+    {
+        $this->pdo->exec('INSERT INTO dblibTest.test SET row1 = 1, row2 = 2;');
+        $dataArray = ['row1' => '1'];
+        $sql = 'SELECT * FROM test WHERE row1 = :row1';
+
+        $result = $this->prepStmt->executePreparedFetchAsClass(
+            $sql,
+            $dataArray,
+            TestObject1::class
+        );
+
+        $this->assertInstanceOf(TestObject1::class, $result);
+    }
+
+    public function testPreparedFetchAsClassThrowsExceptionIfFetchReturnsFalse(): void
+    {
+        $this->expectException(DbLibQueryException::class);
+        $this->expectExceptionMessage('PDO::fetch() failed to retrieve a result.');
+
+        $dataArray = ['row1' => '1'];
+        $sql = 'SELECT * FROM test WHERE row1 = :row1';
+
+        $this->prepStmt->executePreparedFetchAsClass(
+            $sql,
+            $dataArray,
+            TestObject1::class
+        );
+    }
+
+    public function testExecuteStmtThrowsExceptionWhenExecuteFails(): void
+    {
+        $this->expectException(DbLibException::class);
+        $this->expectExceptionMessage('Failed to execute prepared statement.');
+
+        $dataArray = ['row1' => '1'];
+        $sql = 'SELECT * FROM oops WHERE row1 = :row1';
+
+        $this->prepStmt->executePreparedFetchAsClass(
+            $sql,
+            $dataArray,
+            TestObject1::class
         );
     }
 }

@@ -25,6 +25,7 @@ namespace Geeshoe\DbLib\Core;
 
 use Geeshoe\DbLib\Data\Statements;
 use Geeshoe\DbLib\Exceptions\DbLibException;
+use Geeshoe\DbLib\Exceptions\DbLibQueryException;
 
 /**
  * Class PreparedStatements
@@ -46,6 +47,38 @@ class PreparedStatements
     public function __construct(\PDO $pdo)
     {
         $this->pdo = $pdo;
+    }
+
+    /**
+     * @param array $dataArray
+     *
+     * @throws DbLibException
+     */
+    protected function checkDataArrayValid(array $dataArray): void
+    {
+        if (empty($dataArray)) {
+            throw new DbLibException(
+                '$userSuppliedData array must not be empty.'
+            );
+        }
+    }
+
+    /**
+     * @param \PDOStatement $statement
+     *
+     * @return \PDOStatement
+     *
+     * @throws DbLibException
+     */
+    protected function executeStmt(\PDOStatement $statement): \PDOStatement
+    {
+        if (!$statement->execute()) {
+            throw new DbLibException(
+                'Failed to execute prepared statement.'
+            );
+        }
+
+        return $statement;
     }
 
     /**
@@ -105,11 +138,7 @@ class PreparedStatements
      */
     public function executePreparedInsertQuery(string $table, array $userSuppliedData): void
     {
-        if (empty($userSuppliedData)) {
-            throw new DbLibException(
-                '$userSuppliedData array must not be empty.'
-            );
-        }
+        $this->checkDataArrayValid($userSuppliedData);
 
         $parsedDataArray = Statements::prepareInsertQueryData($table, $userSuppliedData);
 
@@ -124,5 +153,52 @@ class PreparedStatements
                 'Failed to execute prepared statement.'
             );
         }
+    }
+
+    /**
+     * Bind values to the supplied SQL statement, execute prepared statement, and
+     * return the result as a class.
+     *
+     * As this method is unable to predict what the sqlStatement will be, the
+     * supplied key to each value within the data array will be parsed and used
+     * as the placeholder when preparing the SQL statement. Therefor, you must
+     * format the SQL statement accordingly. See the param examples below.
+     *
+     * @param string $sqlStatement      'SELECT * FROM table WHERE MySQL_Column => :MySQL_Column;'
+     * @param array  $userSuppliedData  ['MySQL_Column' => 'Sanitized_Value']
+     * @param string $className         NameOfClass::class
+     *
+     * @return object
+     *
+     * @throws DbLibQueryException
+     */
+    public function executePreparedFetchAsClass(
+        string $sqlStatement,
+        array $userSuppliedData,
+        string $className
+    ): object {
+        $this->checkDataArrayValid($userSuppliedData);
+
+        $values = Statements::getValuesArray($userSuppliedData);
+
+        $stmt = $this->prepareStatement($sqlStatement);
+
+        foreach ($values as $placeHolder => $value) {
+            $this->bindValue($stmt, $placeHolder, $value);
+        }
+
+        $stmt = $this->executeStmt($stmt);
+
+        $stmt->setFetchMode(\PDO::FETCH_CLASS, $className);
+
+        $result = $stmt->fetch();
+
+        if ($result === false) {
+            throw new DbLibQueryException(
+                'PDO::fetch() failed to retrieve a result.'
+            );
+        }
+
+        return $result;
     }
 }
