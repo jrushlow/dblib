@@ -43,4 +43,17 @@ class StatementsTest extends TestCase
         $this->assertSame($expectedSql, $data['sql']);
         $this->assertSame($expectedValuesArray, $data['values']);
     }
+
+    public function testGetValuesArrayReturnsValidValuesArray(): void
+    {
+        $data = Statements::getValuesArray(
+            ['someColumn' => 'myValue1', 'anotherColumn' => 'myValue2']
+        );
+
+        $expectedArray = [
+            ':someColumn' => 'myValue1', ':anotherColumn' => 'myValue2'
+        ];
+
+        $this->assertSame($expectedArray, $data);
+    }
 }

@@ -31,6 +31,20 @@ namespace Geeshoe\DbLib\Data;
 class Statements
 {
     /**
+     * @param array $dataArray
+     * @return array
+     */
+    public static function parseDataArray(array $dataArray): array
+    {
+        foreach ($dataArray as $column => $value) {
+            $sqlColumnPlaceHolderPair[] = $column . ' = :' . $column;
+            $values[':' . $column] = $value;
+        }
+
+        return ['placeHolderArray' => $sqlColumnPlaceHolderPair, 'values' => $values];
+    }
+
+    /**
      * Create an SQL INSERT statement & data array.
      *
      * This method is automatically called by
@@ -43,13 +57,21 @@ class Statements
      */
     public static function prepareInsertQueryData(string $table, array $userSuppliedData): array
     {
-        foreach ($userSuppliedData as $column => $value) {
-            $sqlColumnPlaceHolderPair[] = $column . ' = :' . $column;
-            $values[':' . $column] = $value;
-        }
+        $dataArray = self::parseDataArray($userSuppliedData);
 
-        $sql = 'INSERT INTO '.$table.' SET '. implode(', ', $sqlColumnPlaceHolderPair);
+        $sql = 'INSERT INTO '.$table.' SET '. implode(', ', $dataArray['placeHolderArray']);
 
-        return ['sql' => $sql, 'values' => $values];
+        return ['sql' => $sql, 'values' => $dataArray['values']];
+    }
+
+    /**
+     * @param array $userSuppliedData
+     * @return array
+     */
+    public static function getValuesArray(array $userSuppliedData): array
+    {
+        $values = self::parseDataArray($userSuppliedData);
+
+        return $values['values'];
     }
 }
