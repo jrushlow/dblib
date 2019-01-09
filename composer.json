@@ -23,11 +23,18 @@
     ],
     "require" : {
         "php" : "^7.1",
-        "ext-pdo_mysql" : "*"
+        "ext-pdo_mysql" : "*",
+        "ext-pdo": "*",
+        "ext-json": "*"
     },
     "autoload": {
         "psr-4": {
             "Geeshoe\\DbLib\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Geeshoe\\DbLibTests\\": "src/"
         }
     },
     "require-dev": {

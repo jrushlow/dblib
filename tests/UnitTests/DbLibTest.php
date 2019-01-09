@@ -16,148 +16,31 @@
  */
 namespace Geeshoe\DbLibTests;
 
-use Geeshoe\DbLib\DbLib;
-use Geeshoe\DbLib\DbLibException;
-use org\bovigo\vfs\vfsStream;
+use Geeshoe\DbLib\Config\ConfigJsonAdapter;
+use Geeshoe\DbLib\Core\DbLib;
 use PHPUnit\Framework\TestCase;
 
 class DbLibTest extends TestCase
 {
-    public function invokeMethod(&$object, $methodName, array $params = array())
+    /**
+     * @var DbLib
+     */
+    public $db;
+
+    /**
+     * @inheritdoc
+     */
+    public function setUp()
     {
-        $reflection = new \ReflectionClass(get_class($object));
-        $method = $reflection->getMethod($methodName);
-        $method->setAccessible(true);
+        $pdo =$this->getMockBuilder(\PDO::class)
+            ->disableOriginalConstructor()
+            ->getMock();
 
-        return $method->invokeArgs($object, $params);
-    }
-
-    public function testConnectThrowsExceptionIfConfigFileIsUnavailable()
-    {
-        $db = new DbLib('/some/dblib/path/to/config.json');
-
-        $this->expectException(DbLibException::class);
-        $this->expectExceptionMessage('Specified config file location does not exists for DbLib.');
-        $this->invokeMethod($db, 'connect');
-    }
-
-    public function setConfigFile()
-    {
-        vfsStream::setup('config');
-        $file = vfsStream::url('config/dbconfig.json');
-        return $file;
-    }
-
-    public function testConnectThrowsExceptionWhenConfigFileIsMalformed()
-    {
-        $file = $this->setConfigFile();
-        file_put_contents(
-            $file,
-            '{
-                      "MalformedDbConfig" : {
-                      }
-                    }'
-        );
-
-        $db = new DbLib($file);
-
-        $this->expectException(DbLibException::class);
-        $this->expectExceptionMessage('DbLib config file malformed.');
-
-        $this->invokeMethod($db, 'connect');
-    }
-
-    public function testDbLibConfigMethodParsesConfigFile()
-    {
-        $file = $this->setConfigFile();
-        file_put_contents(
-            $file,
-            '{
-                      "dblibConfig" : {
-                        "hostName" : "127.0.0.1",
-                        "port" : "3306",
-                        "username" : "myUsername",
-                        "password" : "SomePassword",
-                        "database" : "someDatabase",
-                        "pdoAttributes" : [
-                          {
-                            "attribute" : "PDO::ATTR_CASE",
-                            "value" : "PDO::CASE_NATURAL"
-                          },
-                          {
-                            "attribute" : "PDO::ATTR_ERRMODE",
-                            "value" : "PDO::ERRMODE_EXCEPTION"
-                          }
-                        ]
-                      }
-                    }'
-        );
-        $db = new DbLib($file);
-        $this->expectException(DbLibException::class);
-        $test = $this->invokeMethod($db, 'connect');
-        self::assertInstanceOf(\PDO::class, $test);
-    }
-
-    public function configDataProvider()
-    {
-        return [
-            'Missing Host Name' => ['{"dblibConfig" : {"hostName" : "127.0.0.1"}}', '\Exception']
-        ];
-    }
-
-    public function testConnectThrowsExceptionWhenHostConfigParamIsNotSet()
-    {
-        $file = $this->setConfigFile();
-        file_put_contents($file, '{"dblibConfig" : {"hostName" : ""}}');
-
-        $db = new DbLib($file);
-        $this->expectException(DbLibException::class);
-        $this->expectExceptionMessage('hostName is not set in the DbLib config file.');
-        $this->invokeMethod($db, 'connect');
-    }
-
-    public function testConnectThrowsExceptionWhenPortConfigParamIsNotSet()
-    {
-        $file = $this->setConfigFile();
-        file_put_contents($file, '{"dblibConfig" : {"hostName" : "1","port":""}}');
-
-        $db = new DbLib($file);
-        $this->expectException(DbLibException::class);
-        $this->expectExceptionMessage('port is not set in the DbLib config file.');
-        $this->invokeMethod($db, 'connect');
-    }
-
-    public function testConnectThrowsExceptionWhenUsernameConfigParamIsNotSet()
-    {
-        $file = $this->setConfigFile();
-        file_put_contents(
-            $file,
-            '{"dblibConfig":{"hostName":"1","port":"1","username":""}}'
-        );
-
-        $db = new DbLib($file);
-        $this->expectException(DbLibException::class);
-        $this->expectExceptionMessage('username is not set in the DbLib config file.');
-        $this->invokeMethod($db, 'connect');
-    }
-
-    public function testConnectThrowsExceptionWhenPasswordConfigParamIsNotSet()
-    {
-        $file = $this->setConfigFile();
-        file_put_contents(
-            $file,
-            '{"dblibConfig":{"hostName":"1","port":"1","username":"u","password":""}}'
-        );
-
-        $db = new DbLib($file);
-        $this->expectException(DbLibException::class);
-        $this->expectExceptionMessage('password is not set in the DbLib config file.');
-        $this->invokeMethod($db, 'connect');
+        $this->db = new DbLib($pdo);
     }
 
     public function testCreateDataArrayCreatesInsertArray()
     {
-        $db = new DbLib('some/path');
         $inputArray = [
             'Col1'=>'Value1',
             'Col2'=>'Value2'
@@ -166,15 +49,14 @@ class DbLibTest extends TestCase
         $insertArray = ['Col1','Col2'];
         $valuesArray = [':Col1' => 'Value1', ':Col2' =>'Value2'];
 
-        $db->createDataArray('insert', $inputArray);
+        $this->db->createDataArray('insert', $inputArray);
 
-        self::assertSame($insertArray, $db->insert);
-        self::assertSame($valuesArray, $db->values);
+        self::assertSame($insertArray, $this->db->insert);
+        self::assertSame($valuesArray, $this->db->values);
     }
 
     public function testCreateDataArrayCreatesManipulateArray()
     {
-        $db = new DbLib('some/path');
         $inputArray = [
             'Col1'=>'Value1',
             'Col2'=>'Value2'
@@ -183,21 +65,20 @@ class DbLibTest extends TestCase
         $insertArray = ['`Col1` = :Col1','`Col2` = :Col2'];
         $valuesArray = [':Col1' => 'Value1', ':Col2' =>'Value2'];
 
-        $db->createDataArray('manipulate', $inputArray);
+        $this->db->createDataArray('manipulate', $inputArray);
 
-        self::assertSame($insertArray, $db->insert);
-        self::assertSame($valuesArray, $db->values);
+        self::assertSame($insertArray, $this->db->insert);
+        self::assertSame($valuesArray, $this->db->values);
     }
 
     public function testCreateSqlInsertStatementReturnsSQLStatement()
     {
-        $db = new DbLib('some/path');
         $inputArray = [
             'Col1'=>'Value1',
             'Col2'=>'Value2'
         ];
-        $db->createDataArray('insert', $inputArray);
-        $stmt = $db->createSqlInsertStatement('TestingTable');
+        $this->db->createDataArray('insert', $inputArray);
+        $stmt = $this->db->createSqlInsertStatement('TestingTable');
         self::assertSame(
             'INSERT INTO `TestingTable`(Col1, Col2) VALUE (:Col1, :Col2)',
             $stmt
@@ -206,13 +87,12 @@ class DbLibTest extends TestCase
 
     public function testCreateSqlUpdateStatementReturnsSQLStatement()
     {
-        $db = new DbLib('some/path');
         $inputArray = [
             'Col1'=>'Value1',
             'Col2'=>'Value2'
         ];
-        $db->createDataArray('manipulate', $inputArray);
-        $stmt = $db->createSqlUpdateStatement(
+        $this->db->createDataArray('manipulate', $inputArray);
+        $stmt = $this->db->createSqlUpdateStatement(
             'TestingTable',
             'Col2',
             ':id'
@@ -226,9 +106,8 @@ class DbLibTest extends TestCase
 
     public function testCreateSqlDeleteStatementReturnsSQLStatement()
     {
-        $db = new DbLib('some/path');
 
-        $stmt = $db->createSqlDeleteStatement(
+        $stmt = $this->db->createSqlDeleteStatement(
             'SomeTable',
             'Col1',
             ':id'

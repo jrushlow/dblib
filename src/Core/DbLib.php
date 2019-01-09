@@ -1,46 +1,32 @@
 <?php
 /**
- * Copyright 2018 Geeshoe Development Services
+ * Copyright 2018 Jesse Rushlow - Geeshoe Development
  *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *        http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 declare(strict_types=1);
 
-namespace Geeshoe\DbLib;
+namespace Geeshoe\DbLib\Core;
 
-use \PDO;
+use Geeshoe\DbLib\Exceptions\DbLibException;
+use PDO;
 
 /**
  * Class DbLib
  * @package Geeshoe\DbLib
  */
-class DbLib
+class DbLib extends AbstractConnection
 {
-    /**
-     * @var null|\PDO
-     */
-    protected $connection = null;
-
-    /**
-     * @var null|string
-     */
-    protected $configFilePath = null;
-
-    /**
-     * @var null|object
-     */
-    protected $configJsonFile = null;
-
     /**
      * @var array Populated by the create methods below.
      */
@@ -52,103 +38,6 @@ class DbLib
     public $values = array();
 
     /**
-     * DbLib constructor.
-     *
-     * @param string $absoluteConfigFilePath Absolute path to config file.
-     */
-    public function __construct(string $absoluteConfigFilePath)
-    {
-        $this->configFilePath = $absoluteConfigFilePath;
-    }
-
-    /**
-     * Parse the DbLib .json configuration file.
-     *
-     * @return bool Returns true if able to parse config file.
-     * @throws DbLibException
-     */
-    protected function getDbLibConfig()
-    {
-        if (is_file($this->configFilePath)) {
-            $jsonConfig = file_get_contents($this->configFilePath);
-            $jsonConfig = json_decode($jsonConfig);
-
-            if (!empty($jsonConfig->dblibConfig) && is_object($jsonConfig->dblibConfig)) {
-                $this->configJsonFile = $jsonConfig->dblibConfig;
-                return true;
-            } else {
-                throw new DbLibException('DbLib config file malformed.');
-            }
-        } else {
-            throw new DbLibException('Specified config file location does not exists for DbLib.');
-        }
-    }
-
-    /**
-     * Creates new \PDO instance.
-     *
-     * @return \PDO
-     * @throws DbLibException
-     */
-    protected function connect()
-    {
-        if ($this->getDbLibConfig()) {
-            $arrays = array(
-                'hostName' => 'hostName is not set in the DbLib config file.',
-                'port' => 'port is not set in the DbLib config file.',
-                'username' => 'username is not set in the DbLib config file.',
-                'password' => 'password is not set in the DbLib config file.'
-            );
-
-            $hostName = null;
-            $port = null;
-            $username = null;
-            $password = null;
-
-            foreach ($arrays as $configParam => $exceptionMsg) {
-                if (!empty($this->configJsonFile->$configParam)) {
-                    $$configParam = $this->configJsonFile->$configParam;
-                } else {
-                    throw new DbLibException($exceptionMsg);
-                }
-            }
-
-            $dsn = 'mysql:host=' . $hostName . ';port=' . $port;
-
-            if (!empty($this->configJsonFile->database)) {
-                $dsn .= ';dbname=' . $this->configJsonFile->database;
-            }
-
-            try {
-                $dbc = new PDO($dsn, $username, $password);
-            } catch (\PDOException $ex) {
-                throw new DbLibException(
-                    'Unable to connect to database',
-                    0,
-                    $ex
-                );
-            }
-
-            if (!empty($this->configJsonFile->pdoAttributes)) {
-                $attributes = $this->configJsonFile->pdoAttributes;
-
-                foreach ($attributes as $attribute) {
-                    foreach ($attribute as $key => $value) {
-                        if (!empty($value)) {
-                            $dbc->setAttribute(
-                                constant($key),
-                                constant($value)
-                            );
-                        }
-                    }
-                }
-            }
-
-            return $dbc;
-        }
-    }
-
-    /**
      * Execute a statement without returning any affected row's.
      *
      * Useful for issuing command's to the server.
@@ -157,9 +46,9 @@ class DbLib
      *
      * @throws DbLibException
      */
-    public function executeQueryWithNoReturn(string $sqlStatement)
+    public function executeQueryWithNoReturn(string $sqlStatement): void
     {
-        $this->connect()->exec($sqlStatement);
+        $this->connection->exec($sqlStatement);
     }
 
     /**
@@ -175,10 +64,10 @@ class DbLib
      *
      * @throws DbLibException
      */
-    public function executeQueryWithSingleReturn(string $sqlStatement, int $fetchStyle)
+    public function executeQueryWithSingleReturn(string $sqlStatement, int $fetchStyle = PDO::FETCH_ASSOC)
     {
-        $result = $this->connect()->query($sqlStatement)->fetch($fetchStyle);
-        return $result;
+        $result = $this->connection->query($sqlStatement);
+        return $result->fetch($fetchStyle);
     }
 
     /**
@@ -192,10 +81,10 @@ class DbLib
      *
      * @throws DbLibException
      */
-    public function executeQueryWithAllReturned(string $sqlStatement, int $fetchStyle)
+    public function executeQueryWithAllReturned(string $sqlStatement, int $fetchStyle = PDO::FETCH_ASSOC): array
     {
-        $result = $this->connect()->query($sqlStatement)->fetchAll($fetchStyle);
-        return $result;
+        $query = $this->connection->query($sqlStatement);
+        return $query->fetchAll($fetchStyle);
     }
 
     /**
@@ -210,9 +99,9 @@ class DbLib
      *
      * @throws DbLibException
      */
-    public function manipulateDataWithNoReturn(string $sqlStatement, array $valuesArray)
+    public function manipulateDataWithNoReturn(string $sqlStatement, array $valuesArray): void
     {
-        $stmt = $this->connect()->prepare($sqlStatement);
+        $stmt = $this->connection->prepare($sqlStatement);
 
         foreach ($valuesArray as $key => $value) {
             $stmt->bindValue($key, $value);
@@ -238,9 +127,9 @@ class DbLib
     public function manipulateDataWithSingleReturn(
         string $sqlStatement,
         array $valuesArray,
-        int $fetchStyle
+        int $fetchStyle = PDO::FETCH_ASSOC
     ) {
-        $stmt = $this->connect()->prepare($sqlStatement);
+        $stmt = $this->connection->prepare($sqlStatement);
 
         foreach ($valuesArray as $key => $value) {
             $stmt->bindValue($key, $value);
@@ -248,8 +137,7 @@ class DbLib
 
         $stmt->execute();
 
-        $results = $stmt->fetch($fetchStyle);
-        return $results;
+        return $stmt->fetch($fetchStyle);
     }
 
     /**
@@ -269,9 +157,9 @@ class DbLib
     public function manipulateDataWithAllReturned(
         string $sqlStatement,
         array $valuesArray,
-        int $fetchStyle
-    ) {
-        $stmt = $this->connect()->prepare($sqlStatement);
+        int $fetchStyle = PDO::FETCH_ASSOC
+    ): array {
+        $stmt = $this->connection->prepare($sqlStatement);
 
         foreach ($valuesArray as $key => $value) {
             $stmt->bindValue($key, $value);
@@ -279,11 +167,12 @@ class DbLib
 
         $stmt->execute();
 
-        $results = $stmt->fetchAll($fetchStyle);
-        return $results;
+        return $stmt->fetchAll($fetchStyle);
     }
 
     /**
+     * This method has been replaced by Statements::prepareInsertQueryData.
+     *
      * Creates an array of data to be used in conjunction with the manipulate methods.
      *
      * When the method is called, it populates both the insert and values properties.
@@ -292,17 +181,19 @@ class DbLib
      *
      * See documentation for further examples and use cases.
      *
+     * @deprecated
+     *
      * @param string $typeOfArray Value should be either "insert" or "manipulate"
      * @param array $userSuppliedData
      *
      * @return void
      */
-    public function createDataArray(string $typeOfArray, array $userSuppliedData)
+    public function createDataArray(string $typeOfArray, array $userSuppliedData): void
     {
         foreach (array_keys($userSuppliedData) as $key) {
-            if ($typeOfArray == 'insert') {
+            if ($typeOfArray === 'insert') {
                 $this->insert[] = $key;
-            } elseif ($typeOfArray == 'manipulate') {
+            } elseif ($typeOfArray === 'manipulate') {
                 $this->insert[] = '`' . $key . '`' . ' = :' . $key;
             }
             //@TODO - Throw exception if wrong $typeOfStatement is entered.
@@ -311,15 +202,19 @@ class DbLib
     }
 
     /**
+     * This method has been replaced by Statements::prepareInsertQueryData.
+     *
      * Creates a insert statement. Must call the createDataArray method first!
      *
      * See documentation for further examples and use cases.
+     *
+     * @deprecated
      *
      * @param string $insertInWhatTable
      *
      * @return string Returns a query statement to be used for the manipulate methods.
      */
-    public function createSqlInsertStatement(string $insertInWhatTable)
+    public function createSqlInsertStatement(string $insertInWhatTable): string
     {
         $statement = 'INSERT INTO `'.$insertInWhatTable.'`('
             . implode(', ', $this->insert) .
@@ -344,8 +239,8 @@ class DbLib
         string $updateWhatTable,
         string $updateByWhatColumn,
         string $updateWhatId
-    ) {
-        return 'UPDATE `'.$updateWhatTable.'` SET ' . implode(", ", $this->insert) . ' WHERE `'
+    ): string {
+        return 'UPDATE `'.$updateWhatTable.'` SET ' . implode(', ', $this->insert) . ' WHERE `'
             .$updateByWhatColumn.'` = ' . $updateWhatId;
     }
 
@@ -364,7 +259,7 @@ class DbLib
         string $deleteFromWhichTable,
         string $deleteByWhatColumn,
         string $deleteWhatId
-    ) {
+    ): string {
         return 'DELETE FROM `' . $deleteFromWhichTable . '` WHERE `'
             . $deleteByWhatColumn . '` = ' . $deleteWhatId . ';';
     }

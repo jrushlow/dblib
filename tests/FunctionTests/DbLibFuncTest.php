@@ -18,7 +18,7 @@ declare(strict_types=1);
 
 namespace Geeshoe\DbLibTests\FunctionTests;
 
-use Geeshoe\DbLib\DbLib;
+use Geeshoe\DbLib\Core\DbLib;
 use PHPUnit\Framework\TestCase;
 
 class DbLibFuncTest extends TestCase
@@ -28,6 +28,11 @@ class DbLibFuncTest extends TestCase
      * @var DbLib
      */
     public $db;
+
+    /**
+     * @var \PDO
+     */
+    public $pdo;
 
     protected function setUp()/* The :void return type declaration that should be here would cause a BC issue */
     {
@@ -39,25 +44,38 @@ class DbLibFuncTest extends TestCase
                               row2 INT
                   )');
 
-        $pdo = null;
+        $this->pdo = $pdo;
 
-        $this->db = new DbLib(__DIR__ . '/credentials/dblibConfig.json');
+        $pdo->exec('USE dblibTest;');
+        $this->db = new DbLib($pdo);
     }
 
     protected function tearDown()/* The :void return type declaration that should be here would cause a BC issue */
     {
-        $pdo = new \PDO('mysql:host=' . HOST . ';port=' . PORT, USER, PASS);
-
-        $pdo->exec('DROP DATABASE `dblibTest`');
-        $pdo = null;
+        $this->pdo->exec('DROP DATABASE `dblibTest`');
+        $this->pdo = null;
     }
 
-    public function testExecuteWithNoReturnAndSingleReturn()
+    public function testExecuteWithNoReturnExecutesSQLStmt()
     {
+        $sql = 'INSERT INTO test SET row1 = 1, row2 = 2';
+        $this->db->executeQueryWithNoReturn($sql);
 
-        $this->db->executeQueryWithNoReturn('INSERT INTO dblibTest.test SET row1 = 1, row2 = 2');
+        $query = $this->pdo->query('SELECT * FROM dblibTest.test;');
+        $results = $query->fetch(\PDO::FETCH_ASSOC);
 
-        $query = $this->db->executeQueryWithSingleReturn('SELECT * FROM dblibTest.test', \PDO::FETCH_ASSOC);
+        $this->assertSame(['row1' => '1', 'row2' => '2'], $results);
+    }
+
+    public function testExecuteWithSingleReturnGetsAnArrayFromDatabase()
+    {
+        $sql = 'INSERT INTO dblibTest.test SET row1 = 1, row2 = 2';
+        $this->pdo->exec($sql);
+
+        $query = $this->db->executeQueryWithSingleReturn(
+            'SELECT * FROM dblibTest.test',
+            \PDO::FETCH_ASSOC
+        );
 
         $expected = array(
             'row1' => 1,
