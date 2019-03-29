@@ -45,6 +45,21 @@ class Statements
     }
 
     /**
+     * @param array $dataArray
+     *
+     * @return array
+     */
+    public static function parseDataArrayForStoredProcedure(array $dataArray): array
+    {
+        foreach ($dataArray as $column => $value) {
+            $sqlColumnPlaceHolderPair[] =  ':' . $column;
+            $values[':' . $column] = $value;
+        }
+
+        return ['placeHolderArray' => $sqlColumnPlaceHolderPair, 'values' => $values];
+    }
+
+    /**
      * Create an SQL INSERT statement & data array.
      *
      * This method is automatically called by
