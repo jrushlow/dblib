@@ -26,6 +26,7 @@ use Geeshoe\DbLib\Core\PreparedStatements;
 use Geeshoe\DbLib\Exceptions\DbLibException;
 use Geeshoe\DbLib\Exceptions\DbLibQueryException;
 use Geeshoe\DbLib\TestObject1;
+use PDO;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -41,7 +42,7 @@ class PreparedStatementsTest extends TestCase
     public $prepStmt;
 
     /**
-     * @var \PDO
+     * @var PDO
      */
     public $pdo;
 
@@ -50,7 +51,7 @@ class PreparedStatementsTest extends TestCase
      */
     public function setUp()
     {
-        $pdo = new \PDO('mysql:host=' . HOST . ';port=' . PORT, USER, PASS);
+        $pdo = new PDO('mysql:host=' . HOST . ';port=' . PORT, USER, PASS);
 
         $pdo->exec('CREATE DATABASE IF NOT EXISTS `dblibTest`');
         $pdo->exec('CREATE TABLE IF NOT EXISTS dblibTest.test(
@@ -83,7 +84,7 @@ class PreparedStatementsTest extends TestCase
 
         $result = $this->pdo->query('SELECT * FROM dblibTest.test');
         $result->execute();
-        $result = $result->fetchAll(\PDO::FETCH_ASSOC);
+        $result = $result->fetchAll(PDO::FETCH_ASSOC);
 
         $this->assertSame($dataArray, $result[0]);
     }
@@ -112,6 +113,32 @@ class PreparedStatementsTest extends TestCase
         );
 
         $this->assertInstanceOf(TestObject1::class, $result);
+    }
+
+    public function testExecutePreparedFetchAllAsClassReturnsAnArrayOfObjects(): void
+    {
+        $this->pdo->exec(
+            'INSERT INTO dblibTest.test SET row1 = 1, row2 = 2;
+            INSERT INTO dblibTest.test SET row1 = 2, row2 = 2;'
+        );
+        $dataArray = ['row2' => '2'];
+        $sql = 'SELECT * FROM test WHERE row2 = :row2';
+
+        $results = $this->prepStmt->executePreparedFetchAllAsClass(
+            $sql,
+            $dataArray,
+            TestObject1::class
+        );
+
+        $i = 0;
+
+        $this->assertIsArray($results);
+        foreach ($results as $result) {
+            $this->assertInstanceOf(TestObject1::class, $result);
+            $i++;
+        }
+
+        $this->assertSame(2, $i);
     }
 
     public function testPreparedFetchAsClassThrowsExceptionIfFetchReturnsFalse(): void

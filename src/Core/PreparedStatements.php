@@ -23,9 +23,13 @@ declare(strict_types=1);
 
 namespace Geeshoe\DbLib\Core;
 
+use Exception;
 use Geeshoe\DbLib\Data\Statements;
 use Geeshoe\DbLib\Exceptions\DbLibException;
 use Geeshoe\DbLib\Exceptions\DbLibQueryException;
+use PDO;
+use PDOException;
+use PDOStatement;
 
 /**
  * Class PreparedStatements
@@ -35,16 +39,16 @@ use Geeshoe\DbLib\Exceptions\DbLibQueryException;
 class PreparedStatements
 {
     /**
-     * @var \PDO
+     * @var PDO
      */
     protected $pdo;
 
     /**
      * PreparedStatements constructor.
      *
-     * @param \PDO $pdo
+     * @param PDO $pdo
      */
-    public function __construct(\PDO $pdo)
+    public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
     }
@@ -64,13 +68,14 @@ class PreparedStatements
     }
 
     /**
-     * @param \PDOStatement $statement
+     * @param PDOStatement $statement
      *
-     * @return \PDOStatement
+     * @return PDOStatement
      *
      * @throws DbLibException
+     * @throws PDOException
      */
-    protected function executeStmt(\PDOStatement $statement): \PDOStatement
+    protected function executeStmt(PDOStatement $statement): PDOStatement
     {
         if (!$statement->execute()) {
             throw new DbLibException(
@@ -82,11 +87,12 @@ class PreparedStatements
     }
 
     /**
-     * @param \PDOStatement $statement
+     * @param PDOStatement $statement
      * @param string        $placeHolder
      * @param               $value
+     * @throws DbLibException
      */
-    protected function bindValue(\PDOStatement $statement, string $placeHolder, $value): void
+    protected function bindValue(PDOStatement $statement, string $placeHolder, $value): void
     {
         if ($statement->bindValue($placeHolder, $value) === false) {
             throw new DbLibException(
@@ -96,9 +102,10 @@ class PreparedStatements
     }
 
     /**
-     * @param \Exception|null $exception
+     * @param Exception|null $exception
+     * @throws DbLibException
      */
-    protected function prepareException(\Exception $exception = null): void
+    protected function prepareException(Exception $exception = null): void
     {
         throw new DbLibException(
             'Database is unable to prepare statement.',
@@ -109,13 +116,15 @@ class PreparedStatements
 
     /**
      * @param string $sqlStatement
-     * @return \PDOStatement
+     * @return PDOStatement
+     * @throws DbLibException
+     * @throws DbLibException
      */
-    protected function prepareStatement(string $sqlStatement): \PDOStatement
+    protected function prepareStatement(string $sqlStatement): PDOStatement
     {
         try {
             $stmt = $this->pdo->prepare($sqlStatement);
-        } catch (\PDOException $exception) {
+        } catch (PDOException $exception) {
             $this->prepareException($exception);
         }
 
@@ -133,8 +142,13 @@ class PreparedStatements
      * is your responsibility. It does however, insert a new row into a
      * table by means of using prepared statements.
      *
-     * @param string $table             Table name used by SQL Database.
+     * @param string $table            Table name used by SQL Database.
      * @param array  $userSuppliedData ['MySQL_Column' => 'Sanitized_Value']
+     * @throws DbLibException
+     * @throws PDOException
+     * @throws DbLibException
+     * @throws DbLibException
+     * @throws DbLibException
      */
     public function executePreparedInsertQuery(string $table, array $userSuppliedData): void
     {
@@ -164,32 +178,24 @@ class PreparedStatements
      * as the placeholder when preparing the SQL statement. Therefor, you must
      * format the SQL statement accordingly. See the param examples below.
      *
-     * @param string $sqlStatement      'SELECT * FROM table WHERE MySQL_Column => :MySQL_Column;'
-     * @param array  $userSuppliedData  ['MySQL_Column' => 'Sanitized_Value']
-     * @param string $className         NameOfClass::class
+     * @param string $sqlStatement     'SELECT * FROM table WHERE MySQL_Column => :MySQL_Column;'
+     * @param array  $userSuppliedData ['MySQL_Column' => 'Sanitized_Value']
+     * @param string $className        NameOfClass::class
      *
      * @return object
      *
      * @throws DbLibQueryException
+     * @throws DbLibException
+     * @throws PDOException
      */
     public function executePreparedFetchAsClass(
         string $sqlStatement,
         array $userSuppliedData,
         string $className
     ): object {
-        $this->checkDataArrayValid($userSuppliedData);
+        $stmt = $this->executePreparedPreFetch($sqlStatement, $userSuppliedData);
 
-        $values = Statements::getValuesArray($userSuppliedData);
-
-        $stmt = $this->prepareStatement($sqlStatement);
-
-        foreach ($values as $placeHolder => $value) {
-            $this->bindValue($stmt, $placeHolder, $value);
-        }
-
-        $stmt = $this->executeStmt($stmt);
-
-        $stmt->setFetchMode(\PDO::FETCH_CLASS, $className);
+        $stmt->setFetchMode(PDO::FETCH_CLASS, $className);
 
         $result = $stmt->fetch();
 
@@ -200,5 +206,57 @@ class PreparedStatements
         }
 
         return $result;
+    }
+
+    /**
+     * Bind values to the supplied SQL statement, execute prepared statement, and
+     * returns the results as an array of class's or an empty array if no results
+     * were fetched.
+     *
+     * @param string $sqlStatement
+     * @param array  $userSuppliedData
+     * @param string $className
+     *
+     * @return array
+     *
+     * @throws DbLibException
+     * @throws PDOException
+     */
+    public function executePreparedFetchAllAsClass(
+        string $sqlStatement,
+        array $userSuppliedData,
+        string $className
+    ): array {
+        $stmt = $this->executePreparedPreFetch($sqlStatement, $userSuppliedData);
+
+        $stmt->setFetchMode(PDO::FETCH_CLASS, $className);
+
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * @param string $sqlStatement
+     * @param array  $userSuppliedData
+     *
+     * @return PDOStatement
+     *
+     * @throws DbLibException
+     * @throws PDOException
+     */
+    protected function executePreparedPreFetch(
+        string $sqlStatement,
+        array $userSuppliedData
+    ): PDOStatement {
+        $this->checkDataArrayValid($userSuppliedData);
+
+        $values = Statements::getValuesArray($userSuppliedData);
+
+        $stmt = $this->prepareStatement($sqlStatement);
+
+        foreach ($values as $placeHolder => $value) {
+            $this->bindValue($stmt, $placeHolder, $value);
+        }
+
+        return $this->executeStmt($stmt);
     }
 }
