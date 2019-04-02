@@ -169,4 +169,26 @@ class PreparedStatementsTest extends TestCase
             TestObject1::class
         );
     }
+
+    public function testPreparedNoParamsExecutesAPreparedStmt(): void
+    {
+        $sql = 'INSERT INTO test SET row1 = 10, row2 = 20;';
+        $this->prepStmt->executePreparedNoParams($sql);
+
+        $query = $this->pdo->query('SELECT * FROM test WHERE row1 = "10";');
+        $query->execute();
+
+        $result = $query->fetch();
+
+        $this->assertSame('10', $result['row1']);
+        $this->assertSame('20', $result['row2']);
+    }
+
+    public function testExecutePreparedNoParamsThrowExceptionOnFailure(): void
+    {
+        $this->expectException(DbLibPreparedStmtException::class);
+        $this->expectExceptionMessage('Failed to execute prepared statement with no params.');
+
+        $this->prepStmt->executePreparedNoParams('INSERT INTO test SET row1 = r');
+    }
 }

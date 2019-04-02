@@ -121,6 +121,23 @@ class PreparedStatements
     }
 
     /**
+     * Execute a prepared statement but without any bound param's.
+     *
+     * @param string $sqlStmt
+     *
+     * @throws DbLibPreparedStmtException
+     */
+    public function executePreparedNoParams(string $sqlStmt): void
+    {
+        try {
+            $prepared = $this->prepareStatement($sqlStmt);
+            $this->executeStmt($prepared);
+        } catch (DbLibPreparedStmtException $exception) {
+            DbLibPreparedStmtException::preparedNoParamsFailed($exception);
+        }
+    }
+
+    /**
      * Insert data into table using prepared statements.
      *
      * Caution, this method does not sanitize nor validate and data. That

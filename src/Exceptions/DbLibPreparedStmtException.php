@@ -145,4 +145,18 @@ class DbLibPreparedStmtException extends DbLibException
             $previous
         );
     }
+
+    /**
+     * @param Throwable|null $previous
+     *
+     * @throws DbLibPreparedStmtException
+     */
+    public static function preparedNoParamsFailed(Throwable $previous = null): void
+    {
+        self::throwException(
+            'Failed to execute prepared statement with no params.',
+            0,
+            $previous
+        );
+    }
 }
