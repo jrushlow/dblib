@@ -23,8 +23,7 @@
 namespace Geeshoe\DbLibTests\FunctionTests;
 
 use Geeshoe\DbLib\Core\PreparedStatements;
-use Geeshoe\DbLib\Exceptions\DbLibException;
-use Geeshoe\DbLib\Exceptions\DbLibQueryException;
+use Geeshoe\DbLib\Exceptions\DbLibPreparedStmtException;
 use Geeshoe\DbLib\TestObject1;
 use PDO;
 use PHPUnit\Framework\TestCase;
@@ -91,8 +90,8 @@ class PreparedStatementsTest extends TestCase
 
     public function testExecutePreparedInsertQueryThrowsExceptionOnFailure(): void
     {
-        $this->expectException(DbLibException::class);
-        $this->expectExceptionMessage('Failed to execute prepared statement.');
+        $this->expectException(DbLibPreparedStmtException::class);
+        $this->expectExceptionMessage('Failed to execute the prepared insert query.');
 
         $this->prepStmt->executePreparedInsertQuery(
             'wrongTable',
@@ -143,7 +142,7 @@ class PreparedStatementsTest extends TestCase
 
     public function testPreparedFetchAsClassThrowsExceptionIfFetchReturnsFalse(): void
     {
-        $this->expectException(DbLibQueryException::class);
+        $this->expectException(DbLibPreparedStmtException::class);
         $this->expectExceptionMessage('PDO::fetch() failed to retrieve a result.');
 
         $dataArray = ['row1' => '1'];
@@ -158,7 +157,7 @@ class PreparedStatementsTest extends TestCase
 
     public function testExecuteStmtThrowsExceptionWhenExecuteFails(): void
     {
-        $this->expectException(DbLibException::class);
+        $this->expectException(DbLibPreparedStmtException::class);
         $this->expectExceptionMessage('Failed to execute prepared statement.');
 
         $dataArray = ['row1' => '1'];
