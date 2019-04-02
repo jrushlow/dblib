@@ -24,7 +24,7 @@ declare(strict_types=1);
 namespace Geeshoe\DbLib\Core;
 
 use Geeshoe\DbLib\Data\Statements;
-use Geeshoe\DbLib\Exceptions\DbLibException;
+use Geeshoe\DbLib\Exceptions\DbLibPreparedStmtException;
 
 /**
  * Class PreparedStoredProcedures
@@ -37,7 +37,7 @@ class PreparedStoredProcedures extends PreparedStatements
      * @param string $procedure
      * @param array  $params
      *
-     * @throws DbLibException
+     * @throws DbLibPreparedStmtException
      */
     public function executePreparedStoredProcedure(string $procedure, array $params): void
     {
@@ -51,10 +51,6 @@ class PreparedStoredProcedures extends PreparedStatements
             $this->bindValue($stmt, $placeHolder, $value);
         }
 
-        if (!$stmt->execute()) {
-            throw new DbLibException(
-                'Failed to execute prepared statement.'
-            );
-        }
+        $this->executeStmt($stmt);
     }
 }
