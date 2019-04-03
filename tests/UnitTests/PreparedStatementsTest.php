@@ -24,6 +24,10 @@ namespace Geeshoe\DbLibTests;
 
 use Geeshoe\DbLib\Core\PreparedStatements;
 use Geeshoe\DbLib\Exceptions\DbLibException;
+use Geeshoe\DbLib\Exceptions\DbLibPreparedStmtException;
+use PDO;
+use PDOException;
+use PDOStatement;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -44,7 +48,7 @@ class PreparedStatementsTest extends TestCase
      */
     public function setUp()
     {
-        $this->pdo = $this->getMockBuilder(\PDO::class)
+        $this->pdo = $this->getMockBuilder(PDO::class)
             ->disableOriginalConstructor()
             ->getMock();
     }
@@ -77,7 +81,7 @@ class PreparedStatementsTest extends TestCase
     public function testPrepareStatementCatchesPDOExceptionThrownOnFailure(): void
     {
         $this->pdo->method('prepare')
-            ->willThrowException(new \PDOException());
+            ->willThrowException(new PDOException());
 
         $this->expectException(DbLibException::class);
         $this->expectExceptionMessage('Database is unable to prepare statement.');
@@ -92,7 +96,7 @@ class PreparedStatementsTest extends TestCase
     public function testBindValueThrowsException(): void
     {
         $this->pdo->method('prepare')
-            ->willReturn(new \PDOStatement());
+            ->willReturn(new PDOStatement());
 
         $prepare = new PreparedStatements($this->pdo);
 
@@ -104,5 +108,32 @@ class PreparedStatementsTest extends TestCase
             'someTable',
             ['someColumn' => 'someValue']
         );
+    }
+
+    public function testExecuteStmtThrowsExceptionOnFailure(): void
+    {
+        $this->expectException(DbLibPreparedStmtException::class);
+        $this->expectExceptionMessage('Failed to execute prepared statement.');
+
+        $class = new class($this->pdo) extends PreparedStatements
+        {
+            public function __construct()
+            {
+            }
+
+            public function check(PDOStatement $stmt): void
+            {
+                $this->executeStmt($stmt);
+            }
+        };
+
+        $stmt = $this->getMockBuilder(PDOStatement::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $stmt->method('execute')
+            ->willThrowException(new PDOException('Some failure.'));
+
+        $class->check($stmt);
     }
 }
